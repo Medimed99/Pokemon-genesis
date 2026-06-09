@@ -1,4 +1,3 @@
-// Tableau des types Gen 6+ complet. Les interactions absentes valent 1×.
 const CHART: Record<string, Record<string, number>> = {
   Normal:   { Roche:0.5, Acier:0.5, Spectre:0 },
   Feu:      { Feu:0.5, Eau:0.5, Roche:0.5, Dragon:0.5, Plante:2, Insecte:2, Glace:2, Acier:2 },
@@ -20,7 +19,10 @@ const CHART: Record<string, Record<string, number>> = {
   Fée:      { Combat:2, Dragon:2, Ténèbres:2, Feu:0.5, Poison:0.5, Acier:0.5 },
 };
 
-// defTypes : un ou deux types du défenseur (les effets se multiplient).
 export function getEff(atkType: string, ...defTypes: string[]): number {
   return defTypes.reduce((acc, def) => acc * (CHART[atkType]?.[def] ?? 1), 1);
+}
+
+export function bestEffMult(attackerTypes: string[], defenderTypes: string[]): number {
+  return Math.max(...attackerTypes.map((a) => getEff(a, ...defenderTypes)));
 }

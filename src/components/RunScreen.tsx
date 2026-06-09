@@ -1,43 +1,32 @@
 import { useExp } from '../game/expeditionStore.ts';
 import { useGame } from '../game/gameStore.ts';
-import { spriteUrl } from '../game/pokedex.ts';
-import BattleView from './BattleView.tsx';
-import DraftView from './DraftView.tsx';
-
-function TeamHealth() {
-  const team = useExp((s) => s.team);
-  if (team.length === 0) return null;
-  return (
-    <div className="team-health">
-      {team.map((p, i) => (
-        <div key={i} className={`team-dot ${p.fainted ? 'fainted' : ''}`} title={p.species.name} />
-      ))}
-    </div>
-  );
-}
+import ExpeditionMap from './ExpeditionMap.tsx';
+import BattleResult from './BattleResult.tsx';
+import CaptureNode from './CaptureNode.tsx';
+import { ItemNode, HealNode } from './EventNodes.tsx';
 
 function ExpeditionGate() {
   const workers = useGame((s) => s.workers);
   const balances = useGame((s) => s.balances);
   const startRun = useExp((s) => s.startRun);
   const closeGate = useExp((s) => s.closeGate);
-
-  const hasBandwidth = balances.bandwidth >= 1;
+  const hasBW = balances.bandwidth >= 1;
 
   return (
     <div className="run-gate">
       <div className="run-gate-title">Expédition Arcanes</div>
-      <div className="run-gate-sub">Bande passante disponible : {Math.floor(balances.bandwidth)}/5</div>
-      {!hasBandwidth && <div className="run-gate-warn">Bande passante insuffisante — patiente que la jauge se recharge.</div>}
+      <div className="run-gate-sub">Bande passante : {Math.floor(balances.bandwidth)}/5</div>
       <div className="run-gate-desc">
-        Choisis ton Buddy. Il commence la run avec toi et applique ses bonus d'objets tenus.
-        Construis une équipe en battant 8 secteurs, puis affronte le Lieutenant de la Team Null.
+        Choisis un Buddy pour commencer la run. Avance sur la carte en choisissant ton chemin :
+        combats, captures, objets, soins. Bats le Boss pour gagner des badges et des récompenses.
+        Les combats se résolvent automatiquement selon les types, niveaux et objets.
       </div>
+      {!hasBW && <div className="run-gate-warn">Bande passante insuffisante — attends la recharge.</div>}
       {workers.length === 0 && <div className="run-gate-warn">Capture d'abord un Pokémon via la Blind Box.</div>}
       <div className="buddy-list">
         {workers.map((w, i) => (
-          <button key={i} className="buddy-card" disabled={!hasBandwidth} onClick={() => startRun(w)}>
-            <img src={spriteUrl(w.species.id, w.shiny)} alt={w.species.name} />
+          <button key={i} className="buddy-card" disabled={!hasBW || workers.length === 0} onClick={() => startRun(w)}>
+            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${w.species.id}.png`} alt={w.species.name} />
             <div className="buddy-name">{w.species.name}{w.shiny ? ' ✦' : ''}</div>
             <div className="buddy-detail">N{w.level} · {w.species.types.join('/')}</div>
           </button>
@@ -48,40 +37,54 @@ function ExpeditionGate() {
   );
 }
 
-export default function RunScreen() {
-  const active = useExp((s) => s.active);
-  const result = useExp((s) => s.result);
-  const battle = useExp((s) => s.battle);
-  const draft = useExp((s) => s.draft);
+function VictoryScreen() {
   const badges = useExp((s) => s.badges);
   const closeRun = useExp((s) => s.closeRun);
-
-  if (!active) return <ExpeditionGate />;
-
-  if (result === 'victory' || result === 'defeat') {
-    const won = result === 'victory';
-    return (
-      <div className="run-result">
-        <div className={`result-icon ${won ? 'victory' : 'defeat'}`}>{won ? '✦' : '✗'}</div>
-        <div className="result-title">{won ? 'Secteur libéré !' : 'Run terminée'}</div>
-        <div className="result-sub">
-          {won
-            ? `Tu as obtenu 3 Plans + 2 Artefacts. ${badges} clés de secteur récupérées.`
-            : `Run interrompue après ${badges} clé(s). Les données partielles ont été récupérées.`}
-        </div>
-        <button className="btn primary" onClick={closeRun}>Retour à l'Archive</button>
-      </div>
-    );
-  }
-
   return (
-    <div className="run-screen">
-      <div className="run-top">
-        <span className="run-secteur">Expédition Arcanes</span>
-        <TeamHealth />
+    <div className="run-result">
+      <div className="result-icon victory">✦</div>
+      <div className="result-title">Boss vaincu !</div>
+      <div className="result-sub">
+        Badge {badges} obtenu. +3 Plans +2 Artefacts récupérés dans l'Archive.
       </div>
-      {battle && !draft && <BattleView />}
-      {draft && <DraftView />}
+      <button className="btn primary" onClick={closeRun}>Retour à l'Archive</button>
     </div>
   );
+}
+
+function DefeatScreen() {
+  const closeRun = useExp((s) => s.closeRun);
+  const lastBattle = useExp((s) => s.lastBattle);
+  return (
+    <div className="run-result">
+      <div className="result-icon defeat">✗</div>
+      <div className="result-title">Run terminée</div>
+      <div className="result-sub">
+        Toute l'équipe est K.O. Les données partielles ont été récupérées.
+      </div>
+      {lastBattle && (
+        <div className="br-log" style={{ maxHeight: 120, overflow: 'auto', marginBottom: 12 }}>
+          {lastBattle.log.slice(-8).map((l: {text:string;color?:string}, i: number) => (
+            <div key={i} className={`br-log-line br-${l.color ?? 'gray'}`}>{l.text}</div>
+          ))}
+        </div>
+      )}
+      <button className="btn primary" onClick={closeRun}>Retour à l'Archive</button>
+    </div>
+  );
+}
+
+export default function RunScreen() {
+  const showGate = useExp((s) => s.showGate);
+  const phase = useExp((s) => s.phase);
+
+  if (showGate || phase === 'gate') return <ExpeditionGate />;
+  if (phase === 'map')            return <ExpeditionMap />;
+  if (phase === 'battle_result')  return <BattleResult />;
+  if (phase === 'capture' || phase === 'capture_anim') return <CaptureNode />;
+  if (phase === 'item')           return <ItemNode />;
+  if (phase === 'heal')           return <HealNode />;
+  if (phase === 'victory')        return <VictoryScreen />;
+  if (phase === 'defeat')         return <DefeatScreen />;
+  return <ExpeditionMap />;
 }

@@ -6,6 +6,11 @@ export interface WorkerSave {
   shiny: boolean;
 }
 
+export interface ActiveEffectSave {
+  id: string;
+  expiresAt: number;
+}
+
 export interface GameSave {
   economy: EconomySave;
   workers: WorkerSave[];
@@ -14,6 +19,10 @@ export interface GameSave {
   items: Record<string, number>;
   pokedex: number[];
   lastDaily: number;
+  introCompleted: boolean;
+  playerName: string;
+  playerAvatar: string;
+  activeEffects: ActiveEffectSave[];
 }
 
 export interface SaveAdapter {
