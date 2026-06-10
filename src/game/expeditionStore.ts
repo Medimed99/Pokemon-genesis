@@ -30,6 +30,7 @@ interface ExpState {
   closeGate: () => void;
 
   // Run
+  active: boolean;
   phase: RunPhase;
   team: TeamPokemon[];
   badges: number;
@@ -51,7 +52,6 @@ interface ExpState {
   closeRun: () => void;
 
   // Utils
-  get active(): boolean;
 }
 
 function applyExpAndEvolve(team: TeamPokemon[], expGained: number, withLuckyEgg: boolean): { team: TeamPokemon[]; evolved: string[] } {
@@ -91,17 +91,17 @@ export const useExp = create<ExpState>((set, get) => ({
   lastBattle: null, captureTarget: null, captureSuccess: null,
   itemReward: null, pendingEvolutions: [],
 
-  get active() { return get().phase !== 'gate' && get().showGate === false && get().phase !== 'gate'; },
+  active: false,
 
   openGate:  () => set({ showGate: true }),
-  closeGate: () => set({ showGate: false }),
+  closeGate: () => set({ showGate: false, active: false }),
 
   startRun: (buddy) => {
     if (!economy.canAfford({ bandwidth: BANDWIDTH_COST })) return;
     economy.spend({ bandwidth: BANDWIDTH_COST });
     const startPokemon = makeTeamPokemon(buddy.species, Math.max(10, buddy.level * 8), buddy.species ? null : null);
     const map = generateMap(0);
-    set({ showGate: false, phase: 'map', team: [startPokemon], badges: 0, mapNodes: map, currentNodeId: map[0].id, lastBattle: null, captureTarget: null, captureSuccess: null, itemReward: null, pendingEvolutions: [] });
+    set({ showGate: false, active: true, phase: 'map', team: [startPokemon], badges: 0, mapNodes: map, currentNodeId: map[0].id, lastBattle: null, captureTarget: null, captureSuccess: null, itemReward: null, pendingEvolutions: [] });
   },
 
   chooseNode: (nodeId) => {
@@ -194,7 +194,7 @@ export const useExp = create<ExpState>((set, get) => ({
   skipItem: () => set({ phase: 'map', itemReward: null }),
 
   closeRun: () => set({
-    showGate: false, phase: 'gate', team: [], badges: 0,
+    showGate: false, active: false, phase: 'gate', team: [], badges: 0,
     mapNodes: [], currentNodeId: null, lastBattle: null,
     captureTarget: null, captureSuccess: null, itemReward: null, pendingEvolutions: [],
   }),
