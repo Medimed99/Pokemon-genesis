@@ -1,4 +1,4 @@
-import { KANTO, type Species } from './kanto.ts';
+import { KANTO, ALL_SPECIES, type Species } from './kanto.ts';
 import { bestEffMult } from './typeChart.ts';
 import { HELD_ITEMS, type RunItem } from './runItems.ts';
 
@@ -86,7 +86,7 @@ const EVOLUTIONS: Record<number, { into: number; level: number }> = {
 export function tryEvolve(p: TeamPokemon): TeamPokemon {
   const evo = EVOLUTIONS[p.species.id];
   if (!evo || evo.into === 0 || p.level < evo.level) return p;
-  const nextSpecies = KANTO.find((s) => s.id === evo.into);
+  const nextSpecies = ALL_SPECIES.find((s) => s.id === evo.into);
   if (!nextSpecies) return p;
   const newMax = calcHp(nextSpecies.hp, p.level);
   const hpRatio = p.currentHp / p.maxHp;

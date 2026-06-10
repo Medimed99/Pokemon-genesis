@@ -17,6 +17,11 @@ import RunScreen from './components/RunScreen.tsx';
 import PokerScreen from './components/PokerScreen.tsx';
 import PorygonGuide from './components/PorygonGuide.tsx';
 import ShopModal from './components/ShopModal.tsx';
+import PokedexScreen from './components/PokedexScreen.tsx';
+import QuestsModal from './components/QuestsModal.tsx';
+import ProfileBadge from './components/ProfileBadge.tsx';
+import ProfileModal from './components/ProfileModal.tsx';
+import AchievementToast from './components/AchievementToast.tsx';
 
 export default function App() {
   const colorsReturned = useGame((s) => s.colorsReturned);
@@ -28,6 +33,9 @@ export default function App() {
   const pokerPhase = usePoker((s) => s.phase);
   const pokerActive = pokerPhase !== 'gate';
   const [showShop, setShowShop] = useState(false);
+  const [showDex, setShowDex] = useState(false);
+  const [showQuests, setShowQuests] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   const showExp   = expActive || expGate;
@@ -80,11 +88,14 @@ export default function App() {
         className={`app ${colorsReturned ? '' : 'pre-colors'}`}
         style={{ display: showMain ? undefined : 'none' }}
       >
-        <header className="title">
-          <span className="title-main">Pokémon Code Genesis</span>
-          <span className="title-sub">Acte I · Secteur Kanto</span>
-        </header>
-        <Hud />
+        <div className="top-row">
+          <ProfileBadge onOpen={() => setShowProfile(true)} />
+          <div className="title">
+            <span className="title-main">Pokémon Code Genesis</span>
+            <span className="title-sub">Acte I · Secteur Kanto</span>
+          </div>
+        </div>
+        <Hud onPokedex={() => setShowDex(true)} onQuests={() => setShowQuests(true)} />
         <div className="noyau-stage"><NoyauScene onTap={tapNoyau} /></div>
         <PorygonDialogue />
         <PokeBoxPanel />
@@ -93,6 +104,10 @@ export default function App() {
         <ModuleDoors onShop={() => setShowShop(true)} />
         <PorygonGuide />
         {showShop && <ShopModal onClose={() => setShowShop(false)} />}
+        {showDex && <PokedexScreen onClose={() => setShowDex(false)} />}
+        {showQuests && <QuestsModal onClose={() => setShowQuests(false)} />}
+        {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+        <AchievementToast />
       </div>
 
       {showExp && <div className="app fullscreen"><RunScreen /></div>}

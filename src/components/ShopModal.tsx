@@ -21,8 +21,9 @@ export default function ShopModal({ onClose }: { onClose: () => void }) {
         <div className="modal-head">
           <span className="modal-title">⚙ Boutique Genesis</span>
           <div className="modal-bal">
-            <span>⚡ {Math.floor(balances.eo)} EO</span>
-            <span>🎫 {Math.floor(balances.luxury_tokens)} JL</span>
+            <span>💰 {Math.floor(balances.coins)}</span>
+            <span>⚡ {Math.floor(balances.eo)}</span>
+            <span>🎫 {Math.floor(balances.luxury_tokens)}</span>
           </div>
           <button className="dex-close" onClick={onClose}>✕</button>
         </div>
@@ -37,9 +38,9 @@ export default function ShopModal({ onClose }: { onClose: () => void }) {
 
         <div className="shop-grid">
           {visible.map((item) => {
-            const bal = item.currency === 'eo' ? balances.eo : balances.luxury_tokens;
+            const bal = item.currency === 'coins' ? balances.coins : item.currency === 'eo' ? balances.eo : balances.luxury_tokens;
             const canBuy = bal >= item.price;
-            const currIcon = item.currency === 'eo' ? '⚡' : '🎫';
+            const currIcon = item.currency === 'coins' ? '💰' : item.currency === 'eo' ? '⚡' : '🎫';
             return (
               <div key={item.id} className="shop-card">
                 <div className="shop-card-icon">{item.icon}</div>

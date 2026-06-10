@@ -18,11 +18,25 @@ export interface GameSave {
   colorsReturned: boolean;
   items: Record<string, number>;
   pokedex: number[];
+  shinyDex: number[];
   lastDaily: number;
   introCompleted: boolean;
   playerName: string;
   playerAvatar: string;
   activeEffects: ActiveEffectSave[];
+  streak: number;
+  bestStreak: number;
+  totalXp: number;
+  quests: import('../quests.ts').ActiveQuest[];
+  questDay: number;
+  fleeStreak: number;
+  totalCoinsEarned: number;
+  expeditionsDone: number;
+  pokerWins: number;
+  pokeboxOpened: number;
+  unlockedAchievements: string[];
+  equipped: { title: string; frame: string; background: string; xpfx: string };
+  unlockedCosmetics: string[];
 }
 
 export interface SaveAdapter {

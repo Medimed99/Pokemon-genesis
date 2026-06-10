@@ -5,7 +5,8 @@ export type ItemEffect =
   | { kind: 'rare_candy'; levels: number }                   // +N levels on pickup
   | { kind: 'exp_boost'; mult: number }                      // Lucky Egg: more EXP
   | { kind: 'hp_regen'; pct: number }                        // Restes: regen % HP per round
-  | { kind: 'choice_scarf'; speedMult: number };             // +50% speed
+  | { kind: 'choice_scarf'; speedMult: number }              // +50% speed
+  | { kind: 'coin_rune'; durationH: number };                // Pièce Rune: ×2 coins capture
 
 export interface RunItem {
   id: string;
@@ -42,4 +43,5 @@ export const HELD_ITEMS: RunItem[] = [
   { id:'rare_candy',    name:'Super Bonbon',      icon:'🍬', description:'+2 niveaux à la capture', effect:{ kind:'rare_candy', levels:2 } },
   { id:'lucky_egg',     name:'Œuf Chance',        icon:'🥚', description:'+50% EXP gagné',         effect:{ kind:'exp_boost', mult:1.5 } },
   { id:'leftovers',     name:'Restes',            icon:'🍖', description:'Régénère 10% PV par combat', effect:{ kind:'hp_regen', pct:0.1 } },
+  { id:'coin_rune',     name:'Pièce Rune',        icon:'🪙', description:'×2 Coins en capture pendant 1h (récupéré à la fin de la run)', effect:{ kind:'coin_rune', durationH:1 } },
 ];

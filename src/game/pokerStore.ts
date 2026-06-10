@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import { economy } from './gameStore.ts';
+import { economy, useGame } from './gameStore.ts';
 import { BASE_DECK, type DeckCard } from './pokerDeck.ts';
 import { CATALOGUE, type CatalogueCard } from './pokerCatalogue.ts';
 import { evaluateHand, HAND_BASE, type HandRank, type EvaluatedHand } from './pokerHands.ts';
 import { applyJokers, type ScoringCtx } from './pokerJokers.ts';
-import { KANTO } from './kanto.ts';
+import { ALL_SPECIES as KANTO } from './kanto.ts';
 
 const BANDWIDTH_COST = 1;
 const HAND_SIZE = 7;
@@ -198,6 +198,7 @@ export const usePoker = create<PokerState>((set, get) => ({
       const gold = get().gold + goldReward(get().ante);
       const shopItems = generateShop(get().jokers);
       economy.grant({ luxury_tokens: 4 + get().ante });
+      if (get().ante >= 4) { useGame.getState().trackQuest('poker', 1); useGame.getState().trackPokerWin(); }
       set({ phase: 'shop', gold, shopItems });
       return;
     }

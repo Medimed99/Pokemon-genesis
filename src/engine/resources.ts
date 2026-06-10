@@ -2,7 +2,8 @@
 // Ajouter une ressource = l'ajouter ici, et nulle part ailleurs.
 
 export type ResourceId =
-  | 'eo'            // Énergie Onirique — monnaie douce, reset au prestige
+  | 'eo'            // Énergie Onirique — monnaie idle/méta, reset au prestige
+  | 'coins'         // Coins — monnaie de capture (boutique balls/baies)
   | 'bandwidth'     // Bande passante — jauge d'accès aux runs, régénère avec le temps
   | 'luxury_tokens' // Jetons de Luxe (shiny_tokens) — monnaie premium
   | 'plans'         // Plans / blueprints — débloquent les habitats
@@ -18,6 +19,7 @@ export interface ResourceDef {
 
 export const RESOURCES: Record<ResourceId, ResourceDef> = {
   eo:            { id: 'eo',            label: 'Énergie Onirique', keptOnPrestige: false },
+  coins:         { id: 'coins',         label: 'Coins',            keptOnPrestige: true  },
   bandwidth:     { id: 'bandwidth',     label: 'Bande passante',   keptOnPrestige: true  },
   luxury_tokens: { id: 'luxury_tokens', label: 'Jetons de Luxe',   keptOnPrestige: true  },
   plans:         { id: 'plans',         label: 'Plans',            keptOnPrestige: true  },

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { economy } from './gameStore.ts';
+import { economy, useGame } from './gameStore.ts';
 
 import {
   generateMap, generateWildEncounter, generateTrainerTeam, generateBossTeam,
@@ -130,6 +130,13 @@ export const useExp = create<ExpState>((set, get) => ({
       const result = autoBattle(team, enemies);
       if (result.playerWon) {
         economy.grant({ plans: 3, artifacts: 2 });
+        // Pièce Rune : si un membre l'a équipée, on accorde le buff ×2 coins
+        const hasRune = get().team.some((p) => p.item?.effect.kind === 'coin_rune');
+        if (hasRune) {
+          useGame.setState((s) => ({ activeEffects: [...s.activeEffects, { id: 'rune_coin', expiresAt: Date.now() + 3600_000 }] }));
+        }
+        useGame.getState().trackQuest('expedition', 1);
+        useGame.getState().trackExpedition();
         const newNodes = markReachable(mapNodes, nodeId);
         set({ phase: 'victory', lastBattle: result, mapNodes: newNodes, badges: badges + 1 });
       } else {
