@@ -24,23 +24,28 @@ import ProfileModal from './components/ProfileModal.tsx';
 import AchievementToast from './components/AchievementToast.tsx';
 
 export default function App() {
-  const colorsReturned = useGame((s) => s.colorsReturned);
-  const introCompleted = useGame((s) => s.introCompleted);
-  const tapNoyau       = useGame((s) => s.tapNoyau);
-  const completeIntro  = useGame((s) => s.completeIntro);
-  const expActive = useExp((s) => s.active);
-  const expGate   = useExp((s) => s.showGate);
+  // ── Tous les hooks en premier, SANS retour anticipé avant eux ───────────
+  const colorsReturned  = useGame((s) => s.colorsReturned);
+  const introCompleted  = useGame((s) => s.introCompleted);
+  const tapNoyau        = useGame((s) => s.tapNoyau);
+  const completeIntro   = useGame((s) => s.completeIntro);
+  const expActive  = useExp((s) => s.active);
+  const expGate    = useExp((s) => s.showGate);
   const pokerPhase = usePoker((s) => s.phase);
-  const pokerActive = pokerPhase !== 'gate';
-  const [showShop, setShowShop] = useState(false);
-  const [showDex, setShowDex] = useState(false);
-  const [showQuests, setShowQuests] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [loaded, setLoaded] = useState(false);
 
-  const showExp   = expActive || expGate;
-  const showPoker = !showExp && pokerActive;
-  const showMain  = !showExp && !showPoker;
+  const [showShop,    setShowShop]    = useState(false);
+  const [showDex,     setShowDex]     = useState(false);
+  const [showQuests,  setShowQuests]  = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [loaded,      setLoaded]      = useState(false);
+
+  const pokerActive = pokerPhase !== 'gate';
+  const showExp     = expActive || expGate;
+  const showPoker   = !showExp && pokerActive;
+  // Le jeu principal est visible si : intro finie ET pas en expédition ET pas en poker
+  const showMain    = introCompleted && !showExp && !showPoker;
+  // Le Canvas Three.js doit être monté dès le chargement pour éviter le context lost
+  const canvasHidden = !showMain;
 
   useEffect(() => {
     const adapter: SaveAdapter = makeSupabaseAdapter() ?? new LocalStorageAdapter();
@@ -63,30 +68,30 @@ export default function App() {
     return () => { window.clearInterval(saveTimer); cancelAnimationFrame(raf); };
   }, []);
 
-  // Don't render until save is loaded (avoids intro flash for returning players)
+  // ── Écran de chargement (aucun composant de jeu monté encore) ───────────
   if (!loaded) {
     return (
-      <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100svh' }}>
-        <div style={{ color: 'var(--neon)', fontFamily: 'monospace' }}>CHARGEMENT_ARCHIVE...</div>
-      </div>
-    );
-  }
-
-  // Intro for new players
-  if (!introCompleted) {
-    return (
-      <div className="app intro-app">
-        <IntroSequence onComplete={(name, avatar) => completeIntro(name, avatar)} />
+      <div className="app" style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100svh' }}>
+        <div style={{ color:'var(--neon)', fontFamily:'monospace' }}>CHARGEMENT_ARCHIVE...</div>
       </div>
     );
   }
 
   return (
     <>
-      {/* Main view — always mounted to preserve WebGL context */}
+      {/* ── Intro ─────────────────────────────────────────────────────── */}
+      {!introCompleted && (
+        <div className="app intro-app">
+          <IntroSequence onComplete={completeIntro} />
+        </div>
+      )}
+
+      {/* ── Vue principale — TOUJOURS montée après chargement ─────────── */}
+      {/* display:none quand intro / expédition / poker sont actifs        */}
+      {/* => le Canvas Three.js n'est jamais démonté (évite WebGL loss)    */}
       <div
         className={`app ${colorsReturned ? '' : 'pre-colors'}`}
-        style={{ display: showMain ? undefined : 'none' }}
+        style={{ display: canvasHidden ? 'none' : undefined }}
       >
         <div className="top-row">
           <ProfileBadge onOpen={() => setShowProfile(true)} />
@@ -95,23 +100,40 @@ export default function App() {
             <span className="title-sub">Acte I · Secteur Kanto</span>
           </div>
         </div>
+
         <Hud onPokedex={() => setShowDex(true)} onQuests={() => setShowQuests(true)} />
-        <div className="noyau-stage"><NoyauScene onTap={tapNoyau} /></div>
+
+        <div className="noyau-stage">
+          <NoyauScene onTap={tapNoyau} />
+        </div>
+
         <PorygonDialogue />
         <PokeBoxPanel />
         <BlindBoxPanel />
         <HabitatPanel />
         <ModuleDoors onShop={() => setShowShop(true)} />
         <PorygonGuide />
-        {showShop && <ShopModal onClose={() => setShowShop(false)} />}
-        {showDex && <PokedexScreen onClose={() => setShowDex(false)} />}
-        {showQuests && <QuestsModal onClose={() => setShowQuests(false)} />}
-        {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+
+        {showShop    && <ShopModal     onClose={() => setShowShop(false)}    />}
+        {showDex     && <PokedexScreen onClose={() => setShowDex(false)}     />}
+        {showQuests  && <QuestsModal   onClose={() => setShowQuests(false)}  />}
+        {showProfile && <ProfileModal  onClose={() => setShowProfile(false)} />}
         <AchievementToast />
       </div>
 
-      {showExp && <div className="app fullscreen"><RunScreen /></div>}
-      {showPoker && <div className="app fullscreen"><PokerScreen /></div>}
+      {/* ── Expédition ────────────────────────────────────────────────── */}
+      {showExp && (
+        <div className="app fullscreen">
+          <RunScreen />
+        </div>
+      )}
+
+      {/* ── Poké-Poker ────────────────────────────────────────────────── */}
+      {showPoker && (
+        <div className="app fullscreen">
+          <PokerScreen />
+        </div>
+      )}
     </>
   );
 }

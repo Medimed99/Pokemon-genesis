@@ -1,6 +1,6 @@
 import { useGame } from '../game/gameStore.ts';
 import { DEFAULT_CONFIG } from '../engine/config.ts';
-import { streakShinyBonus } from '../game/captureEconomy.ts';
+import { streakShinyBonus, levelFromXp } from '../game/captureEconomy.ts';
 
 function fmt(n: number): string {
   n = Math.floor(n);
@@ -12,22 +12,27 @@ function fmt(n: number): string {
 }
 
 export default function Hud({ onPokedex, onQuests }: { onPokedex: () => void; onQuests: () => void }) {
-  const balances = useGame((s) => s.balances);
-  const pps = useGame((s) => s.totalPps());
-  const pokedex = useGame((s) => s.pokedex);
-  const region = useGame((s) => s.currentRegion());
-  const streak = useGame((s) => s.streak);
-  const level = useGame((s) => s.levelInfo());
-  const quests = useGame((s) => s.quests);
+  const balances  = useGame((s) => s.balances);
+  const workers   = useGame((s) => s.workers);
+  const pokedex   = useGame((s) => s.pokedex);
+  const streak    = useGame((s) => s.streak);
+  const totalXp   = useGame((s) => s.totalXp);
+  const quests    = useGame((s) => s.quests);
   const cap = DEFAULT_CONFIG.bandwidth.cap;
 
+  // Calculs purs en dehors du store — pas de sélecteurs instables
+  const pps = workers.reduce((acc, w) => {
+    const rarity = w.shiny ? 10 : 1;
+    const type = w.species.types.includes('Plante') ? 1.2 : 1;
+    return acc + (w.species.bst / 10) * rarity * type * w.level;
+  }, 0);
+  const level = levelFromXp(totalXp);
   const xpPct = Math.floor((level.current / level.needed) * 100);
   const shinyBonus = streakShinyBonus(streak);
   const claimable = quests.filter((q) => !q.claimed && q.progress >= q.target).length;
 
   return (
     <>
-      {/* Player bar: level + XP + name */}
       <div className="player-bar">
         <div className="player-level">Nv{level.level}</div>
         <div className="player-xp-track">
@@ -39,11 +44,10 @@ export default function Hud({ onPokedex, onQuests }: { onPokedex: () => void; on
         </button>
       </div>
 
-      {/* Currencies */}
       <div className="hud">
         <div className="metric">
           <span className="metric-label">💰 Coins</span>
-          <span className="metric-value">{fmt(balances.coins)}</span>
+          <span className="metric-value">{fmt(balances.coins ?? 0)}</span>
         </div>
         <div className="metric">
           <span className="metric-label">⚡ EO</span>
@@ -55,7 +59,6 @@ export default function Hud({ onPokedex, onQuests }: { onPokedex: () => void; on
         </div>
       </div>
 
-      {/* Streak + EO/s + region/dex */}
       <div className="hud-secondary">
         <div className={`streak-chip ${streak >= 10 ? 'streak-hot' : ''}`}>
           🔥 {streak}
@@ -65,7 +68,7 @@ export default function Hud({ onPokedex, onQuests }: { onPokedex: () => void; on
       </div>
 
       <button className="hud-dex-bar" onClick={onPokedex}>
-        <span className="hud-dex-region">📍 {region}</span>
+        <span className="hud-dex-region">📍 Kanto</span>
         <span className="hud-dex-label">📕 Pokédex</span>
         <span className="hud-dex-count">{pokedex.length}/386</span>
       </button>
