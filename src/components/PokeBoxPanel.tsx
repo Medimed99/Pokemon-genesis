@@ -10,7 +10,7 @@ export default function PokeBoxPanel() {
   const items         = useGame((s) => s.items);
   const lastResult    = useGame((s) => s.lastResult);
   const openPokeBox   = useGame((s) => s.openPokeBox);
-  const encounter     = useGame((s) => s.encounter);
+  const reveal        = useGame((s) => s.pokeboxReveal);
 
   const boxUsed: number = (items as Record<string, number>).pokebox_used ?? 0;
   const boxReset: number = (items as Record<string, number>).pokebox_reset ?? 0;
@@ -36,24 +36,24 @@ export default function PokeBoxPanel() {
         Se recharge à minuit.
       </div>
 
-      {encounter && (
+      {reveal && (
         <div className="pb-reveal">
           <img
-            src={spriteUrl(encounter.species.id, encounter.shiny)}
-            alt={encounter.species.name}
+            src={spriteUrl(reveal.species.id, reveal.shiny)}
+            alt={reveal.species.name}
             className="pb-reveal-sprite"
           />
           <div className="pb-reveal-name">
-            {encounter.species.name}{encounter.shiny ? ' ✦ SHINY !' : ''}
+            {reveal.species.name}{reveal.shiny ? ' ✦ SHINY !' : ''}
           </div>
           <div className="pb-reveal-info">
-            {encounter.species.types.join('/')} · BST {encounter.species.bst}
+            {reveal.species.types.join('/')} · BST {reveal.species.bst}
           </div>
           {lastResult && <div className="bb-result">{lastResult}</div>}
         </div>
       )}
 
-      {!encounter && (
+      {!reveal && (
         <>
           {effectiveRemaining > 0 ? (
             <button className="btn primary big" disabled={!canOpen} onClick={openPokeBox}>

@@ -36,7 +36,7 @@ export default function BattleResult() {
       <div className="br-team">
         {team.map((p) => (
           <div key={p.uid} className={`br-pokemon ${p.fainted ? 'br-fainted' : ''}`}>
-            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.species.id}.png`} alt={p.species.name} />
+            <img src={`PLACEHOLDER`} alt={p.species.name} />
             <div>
               <div className="br-pname">{p.species.name} Nv{p.level}</div>
               <div className="br-hp-track">

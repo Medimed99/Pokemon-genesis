@@ -48,6 +48,8 @@ interface GameState {
   pokedex: number[];
   shinyDex: number[];
   encounter: { species: Species; shiny: boolean } | null;
+  pokeboxReveal: { species: Species; shiny: boolean } | null;
+  captureAnim: 'idle' | 'throwing' | 'shaking' | 'caught' | 'fled';
   lastResult: string | null;
   activeEffects: ActiveEffect[];
   // Streak / XP / Quests
@@ -115,6 +117,8 @@ export const useGame = create<GameState>((set, get) => ({
   pokedex: [],
   shinyDex: [],
   encounter: null,
+  pokeboxReveal: null,
+  captureAnim: 'idle',
   lastResult: null,
   activeEffects: [],
   streak: 0,
@@ -218,13 +222,13 @@ export const useGame = create<GameState>((set, get) => ({
       set((s) => ({
         shinyDex: [...s.shinyDex, target.id],
         lastResult: `${target.name} ✦ SHINY archivé !`,
-        encounter: { species: target, shiny: true },
+        pokeboxReveal: { species: target, shiny: true },
         items: { ...s.items, pokebox_used: effectiveUsed + 1, pokebox_reset: isReset ? now : reset },
       }));
       get().trackQuest('pokebox', 1);
       set((st) => ({ pokeboxOpened: st.pokeboxOpened + 1 }));
       get().checkAchievements();
-      setTimeout(() => set({ encounter: null }), 2000);
+      setTimeout(() => set({ pokeboxReveal: null }), 2200);
       return;
     }
 
@@ -256,7 +260,7 @@ export const useGame = create<GameState>((set, get) => ({
       phase: newPhase,
       colorsReturned: colorsReturned || s.colorsReturned,
       lastResult: `${species.name}${shiny ? ' ✦ SHINY' : ''} archivé ! +${coins} Coins`,
-      encounter: { species, shiny },
+      pokeboxReveal: { species, shiny },
       items: { ...s.items, pokebox_used: effectiveUsed + 1, pokebox_reset: isReset ? now : reset },
     }));
     // Quests
@@ -266,7 +270,7 @@ export const useGame = create<GameState>((set, get) => ({
     if (shiny) get().trackQuest('shinies', 1);
     if (isRarePlus(species)) get().trackQuest('rare_captures', 1);
     get().checkAchievements();
-    setTimeout(() => set({ encounter: null }), 2000);
+    setTimeout(() => set({ pokeboxReveal: null }), 2200);
   },
 
   // ── Encounter ──────────────────────────────────────────────────────────────
@@ -286,9 +290,10 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   throwBall: (ballId) => {
-    const { encounter, items, pokedex } = get();
+    const { encounter, items, pokedex, captureAnim } = get();
     const ball = BALLS[ballId];
     if (!encounter || !ball) return;
+    if (captureAnim !== 'idle') return;
     if (get().ballCount(ballId) < 1) { set({ lastResult: `Plus de ${ball.label}.` }); return; }
 
     if (ballId === 'masterball') economy.spend({ master_balls: 1 });
@@ -300,74 +305,68 @@ export const useGame = create<GameState>((set, get) => ({
 
     const success = Math.random() < catchChance(encounter.species, modBall);
     const earlySuccess = pokedex.length < 3 || success;
+    const target = encounter;
 
-    if (earlySuccess) {
-      const id = encounter.species.id;
-      const isDuplicate = pokedex.includes(id);
+    // Animation séquencée : lancer → secousses → capturé/fui → résolution
+    set({ captureAnim: 'throwing' });
+    setTimeout(() => set({ captureAnim: 'shaking' }), 450);
+    setTimeout(() => {
+      set({ captureAnim: earlySuccess ? 'caught' : 'fled' });
+      const id = target.species.id;
+      const isDuplicate = get().pokedex.includes(id);
 
-      // Pinap: bonus EO (kept from before)
-      const pinap = (items.pinap as number ?? 0) > 0;
-      if (pinap) {
-        economy.grant({ eo: Math.floor(encounter.species.bst * 2) });
-        set((s) => ({ items: { ...s.items, pinap: Math.max(0, (s.items.pinap as number ?? 0) - 1) } }));
-      }
+      if (earlySuccess) {
+        const pinap = (get().items.pinap as number ?? 0) > 0;
+        if (pinap) {
+          economy.grant({ eo: Math.floor(target.species.bst * 2) });
+          set((s) => ({ items: { ...s.items, pinap: Math.max(0, (s.items.pinap as number ?? 0) - 1) } }));
+        }
+        const coins = captureCoins(target.species, target.shiny, get().coinMultiplier());
+        const xp = captureXp(target.species, target.shiny);
+        economy.grant({ coins });
+        const newStreak = get().streak + 1;
+        set((s) => ({ totalCoinsEarned: s.totalCoinsEarned + coins, fleeStreak: 0 }));
 
-      // Coins + XP + streak
-      const coins = captureCoins(encounter.species, encounter.shiny, get().coinMultiplier());
-      const xp = captureXp(encounter.species, encounter.shiny);
-      economy.grant({ coins });
-      const newStreak = get().streak + 1;
-      set((s) => ({ totalCoinsEarned: s.totalCoinsEarned + coins, fleeStreak: 0 }));
-
-      if (isDuplicate) {
-        set((s) => ({
-          workers: s.workers.map((w) => w.species.id === id ? { ...w, level: w.level + 1, shiny: w.shiny || encounter.shiny } : w),
-          shinyDex: encounter.shiny && !s.shinyDex.includes(id) ? [...s.shinyDex, id] : s.shinyDex,
-          totalXp: s.totalXp + xp,
-          streak: newStreak,
-          bestStreak: Math.max(s.bestStreak, newStreak),
-          lastResult: `${encounter.species.name}${encounter.shiny ? ' ✦ SHINY' : ''} fusionné ! +${coins} Coins  🔥${newStreak}`,
-          encounter: null,
-        }));
+        if (isDuplicate) {
+          set((s) => ({
+            workers: s.workers.map((w) => w.species.id === id ? { ...w, level: w.level + 1, shiny: w.shiny || target.shiny } : w),
+            shinyDex: target.shiny && !s.shinyDex.includes(id) ? [...s.shinyDex, id] : s.shinyDex,
+            totalXp: s.totalXp + xp, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak),
+            lastResult: `${target.species.name}${target.shiny ? ' ✦ SHINY' : ''} fusionné ! +${coins} Coins  🔥${newStreak}`,
+          }));
+        } else {
+          const newPokedex = [...get().pokedex, id];
+          const colorsReturned = newPokedex.length >= 3;
+          const newPhase: Phase = newPokedex.length >= 3 ? 'free' : get().phase;
+          set((s) => ({
+            workers: [...s.workers, { species: target.species, level: 1, shiny: target.shiny }],
+            pokedex: newPokedex,
+            shinyDex: target.shiny ? [...s.shinyDex, id] : s.shinyDex,
+            totalXp: s.totalXp + xp, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak),
+            phase: newPhase, colorsReturned: colorsReturned || s.colorsReturned,
+            lastResult: `${target.species.name}${target.shiny ? ' ✦ SHINY' : ''} capturé ! +${coins} Coins  🔥${newStreak}`,
+          }));
+        }
+        get().trackQuest('captures', 1);
+        get().trackQuest('coins_earned', coins);
+        get().trackQuest('streak', get().streak, true);
+        if (target.shiny) get().trackQuest('shinies', 1);
+        if (isRarePlus(target.species)) get().trackQuest('rare_captures', 1);
+        get().checkAchievements();
       } else {
-        const newPokedex = [...pokedex, id];
-        const colorsReturned = newPokedex.length >= 3;
-        const newPhase: Phase = newPokedex.length >= 3 ? 'free' : get().phase;
+        const lostStreak = get().streak;
         set((s) => ({
-          workers: [...s.workers, { species: encounter.species, level: 1, shiny: encounter.shiny }],
-          pokedex: newPokedex,
-          shinyDex: encounter.shiny ? [...s.shinyDex, id] : s.shinyDex,
-          totalXp: s.totalXp + xp,
-          streak: newStreak,
-          bestStreak: Math.max(s.bestStreak, newStreak),
-          phase: newPhase,
-          colorsReturned: colorsReturned || s.colorsReturned,
-          lastResult: `${encounter.species.name}${encounter.shiny ? ' ✦ SHINY' : ''} capturé ! +${coins} Coins  🔥${newStreak}`,
-          encounter: null,
+          lastResult: `${target.species.name} s'est enfui…${lostStreak >= 10 ? ` Streak 🔥${lostStreak} perdue !` : ''}`,
+          streak: 0, fleeStreak: s.fleeStreak + 1,
         }));
+        get().trackQuest('flees', 1);
+        get().checkAchievements();
       }
-      // Quests
-      get().trackQuest('captures', 1);
-      get().trackQuest('coins_earned', coins);
-      get().trackQuest('streak', get().streak, true);
-      if (encounter.shiny) get().trackQuest('shinies', 1);
-      if (isRarePlus(encounter.species)) get().trackQuest('rare_captures', 1);
-      get().checkAchievements();
-    } else {
-      // Flee → streak reset
-      const lostStreak = get().streak;
-      set((s) => ({
-        lastResult: `${encounter.species.name} s'est enfui…${lostStreak >= 10 ? ` Streak 🔥${lostStreak} perdue !` : ''}`,
-        encounter: null,
-        streak: 0,
-        fleeStreak: s.fleeStreak + 1,
-      }));
-      get().trackQuest('flees', 1);
-      get().checkAchievements();
-    }
+    }, 1500);
+    setTimeout(() => set({ captureAnim: 'idle', encounter: null }), 2600);
   },
 
-  fleeEncounter: () => set({ encounter: null }),
+    fleeEncounter: () => set({ encounter: null }),
 
   // ── Shop ─────────────────────────────────────────────────────────────────
   buyShopItem: (itemId) => {

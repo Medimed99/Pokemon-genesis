@@ -724,3 +724,52 @@ body { background: var(--bg); color: var(--text); }
 
 /* dex-btn-static (BlindBoxPanel) */
 .bb-dex-btn-static { font-size:11px; color:var(--muted); }
+
+/* ── Expedition Map (Pokelike-style) ──────────────────────────────────────── */
+.exp-map-canvas {
+  background-color: #0a1813;
+  background-image: url("/img/expedition-bg.svg");
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.node-reach-glow { filter: drop-shadow(0 0 6px var(--neon)); animation: node-pulse 1.6s infinite; }
+.node-boss-glow  { filter: drop-shadow(0 0 8px #ff4444); animation: node-pulse 1.2s infinite; }
+@keyframes node-pulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+.exp-map-hint { text-align:center; font-size:11px; color:var(--muted); margin-top:6px; }
+.exp-chip-item-spr { width:18px; height:18px; image-rendering:pixelated; }
+
+/* ── Ball sprites & buttons ───────────────────────────────────────────────── */
+.ball-mini { width:16px; height:16px; vertical-align:middle; image-rendering:pixelated; }
+.ball-btn { display:flex; align-items:center; justify-content:center; gap:6px; }
+.ball-btn img { width:20px; height:20px; image-rendering:pixelated; }
+
+/* ── Capture animation (sprite ball réelle) ───────────────────────────────── */
+.enc-stage { position:relative; height:120px; display:flex; align-items:center; justify-content:center; }
+.enc-sprite { width:96px; height:96px; image-rendering:pixelated; }
+.capture-ball-spr { position:absolute; width:32px; height:32px; image-rendering:pixelated; left:50%; top:50%; }
+.capture-ball-spr.anim-throwing { animation: ball-throw .45s ease-out forwards; }
+@keyframes ball-throw {
+  0%   { transform: translate(-50%, 60px) scale(.5) rotate(0deg); opacity:.5; }
+  100% { transform: translate(-50%, -10px) scale(1) rotate(360deg); opacity:1; }
+}
+.capture-ball-spr.anim-shaking { transform: translate(-50%, -10px); animation: ball-wobble 1s ease-in-out; }
+@keyframes ball-wobble {
+  0%,100%{ transform: translate(-50%,-10px) rotate(0); }
+  20%{ transform: translate(-50%,-10px) rotate(-22deg); }
+  45%{ transform: translate(-50%,-10px) rotate(22deg); }
+  70%{ transform: translate(-50%,-10px) rotate(-14deg); }
+}
+.capture-ball-spr.anim-caught { transform: translate(-50%,-10px); animation: ball-caught .5s ease forwards; }
+@keyframes ball-caught { 0%{filter:drop-shadow(0 0 0 #1d9e75)} 50%{filter:drop-shadow(0 0 12px #1d9e75)} 100%{filter:drop-shadow(0 0 6px #1d9e75)} }
+.capture-ball-spr.anim-fled { transform: translate(-50%,-10px); animation: ball-fled .4s ease forwards; }
+@keyframes ball-fled { 0%{opacity:1} 100%{opacity:0; transform:translate(-50%,10px) scale(.6)} }
+.enc-sprite.enc-caught { animation: sprite-catch .5s ease .9s forwards; }
+.enc-sprite.enc-fled   { animation: sprite-flee .4s ease 1s forwards; }
+
+/* ── Item sprites (event nodes) ───────────────────────────────────────────── */
+.in-icon-spr { width:40px; height:40px; image-rendering:pixelated; }
+.hn-potion { width:22px; height:22px; vertical-align:middle; image-rendering:pixelated; }

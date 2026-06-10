@@ -26,7 +26,7 @@ function ExpeditionGate() {
       <div className="buddy-list">
         {workers.map((w, i) => (
           <button key={i} className="buddy-card" disabled={!hasBW || workers.length === 0} onClick={() => startRun(w)}>
-            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${w.species.id}.png`} alt={w.species.name} />
+            <img src={`PLACEHOLDER`} alt={w.species.name} />
             <div className="buddy-name">{w.species.name}{w.shiny ? ' ✦' : ''}</div>
             <div className="buddy-detail">N{w.level} · {w.species.types.join('/')}</div>
           </button>

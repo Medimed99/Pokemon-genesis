@@ -2,6 +2,8 @@ import { KANTO, ALL_SPECIES, type Species } from './kanto.ts';
 import { bestEffMult } from './typeChart.ts';
 import { HELD_ITEMS, type RunItem } from './runItems.ts';
 
+const BOSS_IDS = [144, 145, 146, 150]; // légendaires comme boss
+
 // ─── Team Pokémon ────────────────────────────────────────────────────────────
 
 export interface TeamPokemon {
@@ -223,6 +225,7 @@ export interface MapNode {
   cleared: boolean;
   reachable: boolean;
   connections: string[]; // ids of next nodes this connects to
+  previewId: number;     // Pokémon id to preview on the node (wild/trainer/boss/capture)
 }
 
 const NODE_TYPE_WEIGHTS: NodeType[] = [
@@ -237,6 +240,11 @@ function randomNodeType(): NodeType {
   return NODE_TYPE_WEIGHTS[Math.floor(Math.random() * NODE_TYPE_WEIGHTS.length)];
 }
 
+function randPreview(): number {
+  const nonLeg = KANTO.filter((s) => !s.legendary);
+  return nonLeg[Math.floor(Math.random() * nonLeg.length)].id;
+}
+
 export function generateMap(badgeCount: number): MapNode[] {
   // Structure: rows of 2 nodes connected in a diamond pattern, 4 rows deep + boss
   const ROWS = 4;
@@ -245,20 +253,20 @@ export function generateMap(badgeCount: number): MapNode[] {
   const makeId = () => `n${idCounter++}`;
 
   // Start node
-  const startNode: MapNode = { id: makeId(), row: 0, col: 0, type: 'start', cleared: true, reachable: false, connections: [] };
+  const startNode: MapNode = { id: makeId(), row: 0, col: 0, type: 'start', cleared: true, reachable: false, connections: [], previewId: 0 };
   nodes.push(startNode);
 
   // Generate row pairs
   const rowNodes: MapNode[][] = [[startNode]];
   for (let r = 1; r <= ROWS; r++) {
-    const left:  MapNode = { id: makeId(), row: r, col: 0, type: r === ROWS ? 'battle_trainer' : randomNodeType(), cleared: false, reachable: false, connections: [] };
-    const right: MapNode = { id: makeId(), row: r, col: 1, type: r === ROWS ? 'capture' : randomNodeType(), cleared: false, reachable: false, connections: [] };
+    const left:  MapNode = { id: makeId(), row: r, col: 0, type: r === ROWS ? 'battle_trainer' : randomNodeType(), cleared: false, reachable: false, connections: [], previewId: randPreview() };
+    const right: MapNode = { id: makeId(), row: r, col: 1, type: r === ROWS ? 'capture' : randomNodeType(), cleared: false, reachable: false, connections: [], previewId: randPreview() };
     nodes.push(left, right);
     rowNodes.push([left, right]);
   }
 
   // Boss node
-  const bossNode: MapNode = { id: makeId(), row: ROWS + 1, col: 0, type: 'boss', cleared: false, reachable: false, connections: [] };
+  const bossNode: MapNode = { id: makeId(), row: ROWS + 1, col: 0, type: 'boss', cleared: false, reachable: false, connections: [], previewId: BOSS_IDS[Math.min(badgeCount, BOSS_IDS.length - 1)] };
   nodes.push(bossNode);
   rowNodes.push([bossNode]);
 
@@ -289,7 +297,6 @@ export function generateMap(badgeCount: number): MapNode[] {
 
 // ─── Enemy generation ────────────────────────────────────────────────────────
 
-const BOSS_IDS = [144, 145, 146, 150]; // legendaries as bosses
 
 export function generateWildEncounter(badgeCount: number): TeamPokemon {
   const level = 5 + badgeCount * 6 + Math.floor(Math.random() * 5);
