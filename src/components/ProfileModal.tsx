@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGame } from '../game/gameStore.ts';
 import { ACHIEVEMENTS, TITLES, FRAMES, BACKGROUNDS, XP_EFFECTS, type RewardKind } from '../game/achievements.ts';
+import { levelFromXp } from '../game/captureEconomy.ts';
 
 const AVATAR_ICONS: Record<string, string> = {
   dev: '👨‍💻', dev_f: '👩‍💻', hacker: '🧑‍💻', scientist: '👨‍🔬',
@@ -14,7 +15,8 @@ export default function ProfileModal({ onClose }: { onClose: () => void }) {
   const name = useGame((s) => s.playerName);
   const avatar = useGame((s) => s.playerAvatar);
   const equipped = useGame((s) => s.equipped);
-  const level = useGame((s) => s.levelInfo());
+  const totalXp = useGame((s) => s.totalXp);
+  const level = levelFromXp(totalXp);
   const pokedex = useGame((s) => s.pokedex);
   const shinyDex = useGame((s) => s.shinyDex);
   const bestStreak = useGame((s) => s.bestStreak);

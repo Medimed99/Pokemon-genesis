@@ -24,13 +24,16 @@ function ScoreBar() {
 }
 
 function PlayingScreen() {
-  const { ante, blindIndex, handsLeft, discardsLeft, jokers,
-          lastHand, lastScore, scoreLog, playHand, discard } = usePoker((s) => ({
-    ante: s.ante, blindIndex: s.blindIndex,
-    handsLeft: s.handsLeft, discardsLeft: s.discardsLeft,
-    jokers: s.jokers, lastHand: s.lastHand, lastScore: s.lastScore,
-    scoreLog: s.scoreLog, playHand: s.playHand, discard: s.discard,
-  }));
+  const ante = usePoker((s) => s.ante);
+  const blindIndex = usePoker((s) => s.blindIndex);
+  const handsLeft = usePoker((s) => s.handsLeft);
+  const discardsLeft = usePoker((s) => s.discardsLeft);
+  const jokers = usePoker((s) => s.jokers);
+  const lastHand = usePoker((s) => s.lastHand);
+  const lastScore = usePoker((s) => s.lastScore);
+  const scoreLog = usePoker((s) => s.scoreLog);
+  const playHand = usePoker((s) => s.playHand);
+  const discard = usePoker((s) => s.discard);
   const hand = usePoker((s) => s.hand);
   const selected = hand.filter((c) => c.selected);
 
@@ -117,9 +120,9 @@ function PokerGate() {
 const MAX_HANDS_DISPLAY = 4;
 
 function ResultScreen() {
-  const { ante, blindIndex, closeGame } = usePoker((s) => ({
-    ante: s.ante, blindIndex: s.blindIndex, closeGame: s.closeGame,
-  }));
+  const ante = usePoker((s) => s.ante);
+  const blindIndex = usePoker((s) => s.blindIndex);
+  const closeGame = usePoker((s) => s.closeGame);
   const won = ante >= 4 && blindIndex >= 2;
 
   return (

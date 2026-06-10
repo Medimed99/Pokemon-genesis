@@ -7,11 +7,13 @@ const RARITY_COLOR: Record<string, string> = {
 };
 
 export default function PokerShop() {
-  const { gold, shopItems, jokers, handLevels, ante, buyShopItem, nextBlind } = usePoker((s) => ({
-    gold: s.gold, shopItems: s.shopItems, jokers: s.jokers,
-    handLevels: s.handLevels, ante: s.ante,
-    buyShopItem: s.buyShopItem, nextBlind: s.nextBlind,
-  }));
+  const gold = usePoker((s) => s.gold);
+  const shopItems = usePoker((s) => s.shopItems);
+  const jokers = usePoker((s) => s.jokers);
+  const handLevels = usePoker((s) => s.handLevels);
+  const ante = usePoker((s) => s.ante);
+  const buyShopItem = usePoker((s) => s.buyShopItem);
+  const nextBlind = usePoker((s) => s.nextBlind);
 
   return (
     <div className="shop">
