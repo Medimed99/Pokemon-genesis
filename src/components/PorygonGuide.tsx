@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGame } from '../game/gameStore.ts';
 import { GUIDE_MESSAGES } from '../game/narrative.ts';
+import { pokemonSprite } from '../game/sprites.ts';
 
 export default function PorygonGuide() {
   const phase      = useGame((s) => s.phase);
@@ -49,7 +50,7 @@ export default function PorygonGuide() {
         </div>
       )}
       <button className={`pz-guide-btn ${flash ? 'pz-flash' : ''}`} onClick={handleTap} aria-label="Aide Porygon-Z">
-        <div className="pz-guide-icon">⬡</div>
+        <img className="pz-guide-spr" src={pokemonSprite(474)} alt="Porygon-Z" />
       </button>
     </div>
   );

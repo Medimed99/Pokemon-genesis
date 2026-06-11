@@ -1,16 +1,17 @@
 import { useGame } from '../game/gameStore.ts';
 import { spriteUrl } from '../game/pokedex.ts';
+import { UI_SPRITES } from '../game/sprites.ts';
 
 const MAX_DAILY = 5;
 const DAY_MS = 24 * 3600 * 1000;
 
 export default function PokeBoxPanel() {
-  const pokedex       = useGame((s) => s.pokedex);
   const phase         = useGame((s) => s.phase);
   const items         = useGame((s) => s.items);
   const lastResult    = useGame((s) => s.lastResult);
   const openPokeBox   = useGame((s) => s.openPokeBox);
-  const encounter     = useGame((s) => s.encounter);
+  const claimDaily    = useGame((s) => s.claimDaily);
+  const reveal        = useGame((s) => s.pokeboxReveal);
 
   const boxUsed: number = (items as Record<string, number>).pokebox_used ?? 0;
   const boxReset: number = (items as Record<string, number>).pokebox_reset ?? 0;
@@ -36,24 +37,24 @@ export default function PokeBoxPanel() {
         Se recharge à minuit.
       </div>
 
-      {encounter && (
+      {reveal && (
         <div className="pb-reveal">
           <img
-            src={spriteUrl(encounter.species.id, encounter.shiny)}
-            alt={encounter.species.name}
+            src={spriteUrl(reveal.species.id, reveal.shiny)}
+            alt={reveal.species.name}
             className="pb-reveal-sprite"
           />
           <div className="pb-reveal-name">
-            {encounter.species.name}{encounter.shiny ? ' ✦ SHINY !' : ''}
+            {reveal.species.name}{reveal.shiny ? ' ✦ SHINY !' : ''}
           </div>
           <div className="pb-reveal-info">
-            {encounter.species.types.join('/')} · BST {encounter.species.bst}
+            {reveal.species.types.join('/')} · BST {reveal.species.bst}
           </div>
           {lastResult && <div className="bb-result">{lastResult}</div>}
         </div>
       )}
 
-      {!encounter && (
+      {!reveal && (
         <>
           {effectiveRemaining > 0 ? (
             <button className="btn primary big" disabled={!canOpen} onClick={openPokeBox}>
@@ -61,7 +62,7 @@ export default function PokeBoxPanel() {
             </button>
           ) : (
             <div className="pb-empty">
-              <div className="pb-empty-icon">📦</div>
+              <img className="pb-empty-spr" src={UI_SPRITES.box} alt="" style={{ filter: 'grayscale(1) opacity(.5)' }} />
               <div>PokéBox épuisée pour aujourd'hui.</div>
               <div className="pb-recharge">Recharge dans {hToReset}h · ou via la Boutique</div>
             </div>
@@ -69,7 +70,7 @@ export default function PokeBoxPanel() {
         </>
       )}
 
-      <div className="pb-dex-note">Pokédex : {pokedex.length}/151</div>
+      <button className="btn small daily-btn" onClick={claimDaily}>Récolte quotidienne (+10 Balls, +300 Coins)</button>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useGame } from '../game/gameStore.ts';
 import { DEFAULT_CONFIG } from '../engine/config.ts';
 import { streakShinyBonus, levelFromXp } from '../game/captureEconomy.ts';
+import { activeRegion, computeProgress } from '../game/progression.ts';
+import { UI_SPRITES } from '../game/sprites.ts';
 
 function fmt(n: number): string {
   n = Math.floor(n);
@@ -20,7 +22,6 @@ export default function Hud({ onPokedex, onQuests }: { onPokedex: () => void; on
   const quests    = useGame((s) => s.quests);
   const cap = DEFAULT_CONFIG.bandwidth.cap;
 
-  // Calculs purs en dehors du store — pas de sélecteurs instables
   const pps = workers.reduce((acc, w) => {
     const rarity = w.shiny ? 10 : 1;
     const type = w.species.types.includes('Plante') ? 1.2 : 1;
@@ -30,6 +31,9 @@ export default function Hud({ onPokedex, onQuests }: { onPokedex: () => void; on
   const xpPct = Math.floor((level.current / level.needed) * 100);
   const shinyBonus = streakShinyBonus(streak);
   const claimable = quests.filter((q) => !q.claimed && q.progress >= q.target).length;
+  const region = activeRegion(pokedex);
+  const shinyDex = useGame((s) => s.shinyDex);
+  const regionProg = computeProgress(pokedex, shinyDex).find((p) => p.region === region);
 
   return (
     <>
@@ -40,37 +44,38 @@ export default function Hud({ onPokedex, onQuests }: { onPokedex: () => void; on
           <span className="player-xp-text">Archiviste · {level.current}/{level.needed} XP</span>
         </div>
         <button className="player-quests-btn" onClick={onQuests}>
-          📋{claimable > 0 && <span className="quest-badge">{claimable}</span>}
+          <img className="ui-ico" src={UI_SPRITES.quests} alt="Quêtes" />
+          {claimable > 0 && <span className="quest-badge">{claimable}</span>}
         </button>
       </div>
 
       <div className="hud">
         <div className="metric">
-          <span className="metric-label">💰 Coins</span>
+          <span className="metric-label"><img className="ui-ico-sm" src={UI_SPRITES.coins} alt="" /> Coins</span>
           <span className="metric-value">{fmt(balances.coins ?? 0)}</span>
         </div>
         <div className="metric">
-          <span className="metric-label">⚡ EO</span>
+          <span className="metric-label"><img className="ui-ico-sm" src={UI_SPRITES.eo} alt="" /> EO</span>
           <span className="metric-value">{fmt(balances.eo)}</span>
         </div>
         <div className="metric">
-          <span className="metric-label">📶 Bande p.</span>
+          <span className="metric-label">Bande p.</span>
           <span className="metric-value">{Math.floor(balances.bandwidth)}/{cap}</span>
         </div>
       </div>
 
       <div className="hud-secondary">
         <div className={`streak-chip ${streak >= 10 ? 'streak-hot' : ''}`}>
-          🔥 {streak}
+          <img className="ui-ico-sm" src={UI_SPRITES.streak} alt="Streak" /> {streak}
           {shinyBonus > 0 && <span className="streak-bonus">+{(shinyBonus * 100).toFixed(1)}% shiny</span>}
         </div>
         <div className="eos-chip">{fmt(pps)} EO/s</div>
       </div>
 
       <button className="hud-dex-bar" onClick={onPokedex}>
-        <span className="hud-dex-region">📍 Kanto</span>
-        <span className="hud-dex-label">📕 Pokédex</span>
-        <span className="hud-dex-count">{pokedex.length}/386</span>
+        <span className="hud-dex-region">{region}</span>
+        <span className="hud-dex-label"><img className="ui-ico-sm" src={UI_SPRITES.pokedex} alt="" /> Pokédex</span>
+        <span className="hud-dex-count">{regionProg ? `${regionProg.caught}/${regionProg.total}` : pokedex.length}</span>
       </button>
     </>
   );

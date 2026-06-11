@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
+import { pokemonSprite } from '../game/sprites.ts';
 
+// Pokémon partenaires emblématiques comme avatar (sprites PokeAPI)
 const AVATARS = [
-  { id: 'dev',      icon: '👨‍💻', label: 'Développeur',  color: '#4fa8d0' },
-  { id: 'dev_f',    icon: '👩‍💻', label: 'Développeuse', color: '#b060d8' },
-  { id: 'hacker',   icon: '🧑‍💻', label: 'Hacker',       color: '#1d9e75' },
-  { id: 'scientist',icon: '👨‍🔬', label: 'Scientifique', color: '#d9a441' },
-  { id: 'sci_f',    icon: '👩‍🔬', label: 'Chercheuse',   color: '#e8473f' },
-  { id: 'wizard',   icon: '🧙',   label: 'Archiviste',   color: '#9060d0' },
-  { id: 'wizard_f', icon: '🧙‍♀️', label: 'Archiviste',   color: '#d06090' },
-  { id: 'ai',       icon: '🤖',   label: 'IA alliée',    color: '#36e3a6' },
+  { id: 'pika',  pokeId: 25,  label: 'Pikachu',   color: '#d9a441' },
+  { id: 'bulba', pokeId: 1,   label: 'Bulbizarre', color: '#5cb85c' },
+  { id: 'char',  pokeId: 4,   label: 'Salamèche', color: '#e8473f' },
+  { id: 'squir', pokeId: 7,   label: 'Carapuce',  color: '#4fa8d0' },
+  { id: 'eevee', pokeId: 133, label: 'Évoli',     color: '#c0a060' },
+  { id: 'gengar',pokeId: 94,  label: 'Ectoplasma',color: '#9060d0' },
+  { id: 'dragon',pokeId: 149, label: 'Dracolosse',color: '#f0a020' },
+  { id: 'mewtwo',pokeId: 150, label: 'Mewtwo',    color: '#b060d8' },
 ];
 
 type IntroPh = 'boot' | 'chen' | 'glitch' | 'pz' | 'setup';
@@ -107,7 +109,7 @@ function ChenScreen({ onDone }: { onDone: () => void }) {
         {isGlitch ? (
           <div className="chen-glitch-portrait">C<br />H<br />E<br />N</div>
         ) : (
-          <div className="chen-portrait">🧑‍🔬</div>
+          <div className="chen-portrait-box"><span>PROF</span><span>CHEN</span></div>
         )}
       </div>
       <div className="dlg-body">
@@ -168,7 +170,7 @@ function PZScreen({ onDone }: { onDone: () => void }) {
   return (
     <div className={`intro-dialogue dlg-pz ${isGlitch ? 'dlg-glitch' : ''}`} onClick={advance}>
       <div className="dlg-portrait">
-        <div className={`pz-portrait ${isGlitch ? 'pz-glitch' : ''}`}>⬡</div>
+        <img className={`pz-portrait-spr ${isGlitch ? 'pz-glitch' : ''}`} src={pokemonSprite(474)} alt="Porygon-Z" />
       </div>
       <div className="dlg-body">
         <div className="dlg-speaker" style={{ color: 'var(--neon)' }}>Porygon-Z · P-Z.exe</div>
@@ -212,7 +214,7 @@ function SetupScreen({ onDone }: { onDone: (name: string, avatar: string) => voi
               style={avatar === a.id ? { borderColor: a.color, boxShadow: `0 0 8px ${a.color}60` } : {}}
               onClick={() => setAvatar(a.id)}
             >
-              <span className="avatar-icon">{a.icon}</span>
+              <img className="avatar-spr" src={pokemonSprite(a.pokeId)} alt={a.label} />
               <span className="avatar-label">{a.label}</span>
             </button>
           ))}

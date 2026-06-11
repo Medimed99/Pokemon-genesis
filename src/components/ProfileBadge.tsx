@@ -1,11 +1,8 @@
 import { useGame } from '../game/gameStore.ts';
 import { TITLES, FRAMES, BACKGROUNDS } from '../game/achievements.ts';
 import { levelFromXp } from '../game/captureEconomy.ts';
-
-const AVATAR_ICONS: Record<string, string> = {
-  dev: '👨‍💻', dev_f: '👩‍💻', hacker: '🧑‍💻', scientist: '👨‍🔬',
-  sci_f: '👩‍🔬', wizard: '🧙', wizard_f: '🧙‍♀️', ai: '🤖',
-};
+import { avatarPokeId } from '../game/avatars.ts';
+import { pokemonSprite } from '../game/sprites.ts';
 
 export default function ProfileBadge({ onOpen }: { onOpen: () => void }) {
   const name = useGame((s) => s.playerName);
@@ -20,7 +17,7 @@ export default function ProfileBadge({ onOpen }: { onOpen: () => void }) {
 
   return (
     <button className={`profile-badge ${bgCss}`} onClick={onOpen}>
-      <div className={`profile-avatar ${frameCss}`}>{AVATAR_ICONS[avatar] ?? '👤'}</div>
+      <div className={`profile-avatar ${frameCss}`}><img className="profile-avatar-spr" src={pokemonSprite(avatarPokeId(avatar))} alt="" /></div>
       <div className="profile-badge-info">
         <div className="profile-badge-name">{name || 'Archiviste'}</div>
         <div className="profile-badge-title">{title}</div>

@@ -1,4 +1,5 @@
 import { useExp, assignItem } from '../game/expeditionStore.ts';
+import { pokemonSprite, itemSprite } from '../game/sprites.ts';
 
 export function ItemNode() {
   const itemReward = useExp((s) => s.itemReward);
@@ -11,7 +12,7 @@ export function ItemNode() {
     <div className="item-node">
       <div className="in-title">Objet trouvé !</div>
       <div className="in-item">
-        <span className="in-icon">{itemReward.icon}</span>
+        <img className="in-icon-spr" src={itemSprite(itemReward.icon)} alt={itemReward.name} />
         <div>
           <div className="in-name">{itemReward.name}</div>
           <div className="in-desc">{itemReward.description}</div>
@@ -21,7 +22,7 @@ export function ItemNode() {
       <div className="in-team">
         {team.filter((p) => !p.fainted).map((p) => (
           <button key={p.uid} className="btn small in-team-btn" onClick={() => assignItem(p.uid, itemReward)}>
-            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.species.id}.png`} alt={p.species.name} />
+            <img src={pokemonSprite(p.species.id)} alt={p.species.name} />
             <span>{p.species.name}</span>
             {p.item && <span className="in-current-item" title={p.item.name}>{p.item.icon} →</span>}
           </button>
@@ -38,12 +39,12 @@ export function HealNode() {
 
   return (
     <div className="heal-node">
-      <div className="hn-title">💊 Centre Pokémon</div>
+      <div className="hn-title"><img className="hn-potion" src={itemSprite("potion")} alt="" /> Centre Pokémon</div>
       <div className="hn-sub">Toute l'équipe est soignée !</div>
       <div className="hn-team">
         {team.map((p) => (
           <div key={p.uid} className="hn-pokemon">
-            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.species.id}.png`} alt={p.species.name} />
+            <img src={pokemonSprite(p.species.id)} alt={p.species.name} />
             <div>
               <div className="hn-pname">{p.species.name} Nv{p.level}</div>
               <div className="br-hp-track">
@@ -58,3 +59,4 @@ export function HealNode() {
     </div>
   );
 }
+

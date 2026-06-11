@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="800" viewBox="0 0 480 800">
+  <defs>
+    <radialGradient id="grass" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#1a3a2e"/>
+      <stop offset="60%" stop-color="#0f2820"/>
+      <stop offset="100%" stop-color="#081813"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#1d9e7522" stroke-width="1"/>
+    </pattern>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="480" height="800" fill="url(#grass)"/>
+  <rect width="480" height="800" fill="url(#grid)"/>
+  <!-- Décor data : "arbres" stylisés en hexagones néon -->
+  <g opacity="0.25" fill="none" stroke="#1d9e75" stroke-width="2">
+    <circle cx="60" cy="120" r="18"/><circle cx="420" cy="180" r="22"/>
+    <circle cx="50" cy="400" r="20"/><circle cx="430" cy="480" r="18"/>
+    <circle cx="70" cy="680" r="22"/><circle cx="410" cy="700" r="20"/>
+  </g>
+  <g opacity="0.4" fill="#36e3a6">
+    <circle cx="120" cy="60" r="1.5"/><circle cx="300" cy="90" r="1.5"/>
+    <circle cx="200" cy="300" r="1.5"/><circle cx="380" cy="350" r="1.5"/>
+    <circle cx="90" cy="540" r="1.5"/><circle cx="320" cy="620" r="1.5"/>
+  </g>
+</svg>

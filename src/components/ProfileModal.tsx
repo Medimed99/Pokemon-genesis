@@ -2,11 +2,8 @@ import { useState } from 'react';
 import { useGame } from '../game/gameStore.ts';
 import { ACHIEVEMENTS, TITLES, FRAMES, BACKGROUNDS, XP_EFFECTS, type RewardKind } from '../game/achievements.ts';
 import { levelFromXp } from '../game/captureEconomy.ts';
-
-const AVATAR_ICONS: Record<string, string> = {
-  dev: '👨‍💻', dev_f: '👩‍💻', hacker: '🧑‍💻', scientist: '👨‍🔬',
-  sci_f: '👩‍🔬', wizard: '🧙', wizard_f: '🧙‍♀️', ai: '🤖',
-};
+import { avatarPokeId } from '../game/avatars.ts';
+import { pokemonSprite, itemSprite, UI_SPRITES } from '../game/sprites.ts';
 
 type Tab = 'profil' | 'succes' | 'perso';
 
@@ -51,7 +48,7 @@ export default function ProfileModal({ onClose }: { onClose: () => void }) {
         {tab === 'profil' && (
           <div className="profile-content">
             <div className={`profile-hero ${bgCss}`}>
-              <div className={`profile-hero-avatar ${frameCss}`}>{AVATAR_ICONS[avatar] ?? '👤'}</div>
+              <div className={`profile-hero-avatar ${frameCss}`}><img className="profile-hero-spr" src={pokemonSprite(avatarPokeId(avatar))} alt="" /></div>
               <div className="profile-hero-name">{name || 'Archiviste'}</div>
               <div className="profile-hero-title">{TITLES[equipped.title] ?? 'Archiviste'}</div>
               <div className="profile-hero-xp">
@@ -64,7 +61,7 @@ export default function ProfileModal({ onClose }: { onClose: () => void }) {
             <div className="profile-stats">
               <div className="profile-stat"><span>{pokedex.length}/386</span><label>Pokédex</label></div>
               <div className="profile-stat"><span>{shinyDex.length}</span><label>Shiny ✦</label></div>
-              <div className="profile-stat"><span>🔥{bestStreak}</span><label>Meilleure streak</label></div>
+              <div className="profile-stat"><span><img className="stat-ico" src={UI_SPRITES.streak} alt="" />{bestStreak}</span><label>Meilleure streak</label></div>
               <div className="profile-stat"><span>{expeditionsDone}</span><label>Expéditions</label></div>
               <div className="profile-stat"><span>{pokerWins}</span><label>Victoires Poker</label></div>
               <div className="profile-stat"><span>{unlockedCount}</span><label>Succès</label></div>
@@ -79,7 +76,7 @@ export default function ProfileModal({ onClose }: { onClose: () => void }) {
               const showHidden = a.hidden && !got;
               return (
                 <div key={a.id} className={`achievement-card ${got ? 'ach-unlocked' : 'ach-locked'}`}>
-                  <span className="ach-icon">{showHidden ? '❔' : a.icon}</span>
+                  {showHidden ? <span className="ach-icon-hidden">?</span> : <img className="ach-icon-spr" src={itemSprite(a.icon)} alt="" />}
                   <div className="ach-info">
                     <div className="ach-name">{showHidden ? 'Succès caché' : a.name}</div>
                     <div className="ach-desc">{showHidden ? 'Continue de jouer pour le découvrir…' : a.desc}</div>
@@ -129,7 +126,7 @@ function CosmeticPicker({ label, all, unlocked, equipped, onPick }: {
               disabled={!has}
               onClick={() => onPick(id)}
             >
-              {has ? nm : '🔒'}
+              {has ? nm : '×'}
             </button>
           );
         })}

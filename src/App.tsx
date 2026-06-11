@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useGame } from './game/gameStore.ts';
 import { useExp } from './game/expeditionStore.ts';
 import { usePoker } from './game/pokerStore.ts';
+import { activeRegion } from './game/progression.ts';
 import type { SaveAdapter } from './game/save/SaveAdapter.ts';
 import { LocalStorageAdapter } from './game/save/LocalStorageAdapter.ts';
 import { makeSupabaseAdapter } from './game/save/SupabaseAdapter.ts';
@@ -22,6 +23,7 @@ import QuestsModal from './components/QuestsModal.tsx';
 import ProfileBadge from './components/ProfileBadge.tsx';
 import ProfileModal from './components/ProfileModal.tsx';
 import AchievementToast from './components/AchievementToast.tsx';
+import StoneModal from './components/StoneModal.tsx';
 
 export default function App() {
   // ── Tous les hooks en premier, SANS retour anticipé avant eux ───────────
@@ -32,11 +34,13 @@ export default function App() {
   const expActive  = useExp((s) => s.active);
   const expGate    = useExp((s) => s.showGate);
   const pokerPhase = usePoker((s) => s.phase);
+  const pokedexForRegion = useGame((s) => s.pokedex);
 
   const [showShop,    setShowShop]    = useState(false);
   const [showDex,     setShowDex]     = useState(false);
   const [showQuests,  setShowQuests]  = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showStones, setShowStones] = useState(false);
   const [loaded,      setLoaded]      = useState(false);
 
   const pokerActive = pokerPhase !== 'gate';
@@ -97,7 +101,7 @@ export default function App() {
           <ProfileBadge onOpen={() => setShowProfile(true)} />
           <div className="title">
             <span className="title-main">Pokémon Code Genesis</span>
-            <span className="title-sub">Acte I · Secteur Kanto</span>
+            <span className="title-sub">Acte I · Secteur {activeRegion(pokedexForRegion)}</span>
           </div>
         </div>
 
@@ -111,11 +115,12 @@ export default function App() {
         <PokeBoxPanel />
         <BlindBoxPanel />
         <HabitatPanel />
-        <ModuleDoors onShop={() => setShowShop(true)} />
+        <ModuleDoors onShop={() => setShowShop(true)} onStones={() => setShowStones(true)} />
         <PorygonGuide />
 
         {showShop    && <ShopModal     onClose={() => setShowShop(false)}    />}
         {showDex     && <PokedexScreen onClose={() => setShowDex(false)}     />}
+        {showStones  && <StoneModal    onClose={() => setShowStones(false)}   />}
         {showQuests  && <QuestsModal   onClose={() => setShowQuests(false)}  />}
         {showProfile && <ProfileModal  onClose={() => setShowProfile(false)} />}
         <AchievementToast />

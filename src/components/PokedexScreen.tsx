@@ -32,7 +32,7 @@ export default function PokedexScreen({ onClose }: { onClose: () => void }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box pokedex-box" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <span className="modal-title">📕 Pokédex</span>
+          <span className="modal-title">Pokédex</span>
           <button className="dex-close" onClick={onClose}>✕</button>
         </div>
 
@@ -47,7 +47,7 @@ export default function PokedexScreen({ onClose }: { onClose: () => void }) {
                 disabled={!p.unlocked}
                 onClick={() => setRegion(r)}
               >
-                <span className="prt-name">{p.unlocked ? r : `🔒 ${r}`}</span>
+                <span className="prt-name">{p.unlocked ? r : `× ${r}`}</span>
                 <span className="prt-count">{p.caught}/{p.total}</span>
               </button>
             );

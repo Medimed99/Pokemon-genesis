@@ -7,26 +7,22 @@ import { ItemNode, HealNode } from './EventNodes.tsx';
 
 function ExpeditionGate() {
   const workers = useGame((s) => s.workers);
-  const balances = useGame((s) => s.balances);
   const startRun = useExp((s) => s.startRun);
   const closeGate = useExp((s) => s.closeGate);
-  const hasBW = balances.bandwidth >= 1;
 
   return (
     <div className="run-gate">
       <div className="run-gate-title">Expédition Arcanes</div>
-      <div className="run-gate-sub">Bande passante : {Math.floor(balances.bandwidth)}/5</div>
       <div className="run-gate-desc">
         Choisis un Buddy pour commencer la run. Avance sur la carte en choisissant ton chemin :
         combats, captures, objets, soins. Bats le Boss pour gagner des badges et des récompenses.
         Les combats se résolvent automatiquement selon les types, niveaux et objets.
       </div>
-      {!hasBW && <div className="run-gate-warn">Bande passante insuffisante — attends la recharge.</div>}
       {workers.length === 0 && <div className="run-gate-warn">Capture d'abord un Pokémon via la Blind Box.</div>}
       <div className="buddy-list">
         {workers.map((w, i) => (
-          <button key={i} className="buddy-card" disabled={!hasBW || workers.length === 0} onClick={() => startRun(w)}>
-            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${w.species.id}.png`} alt={w.species.name} />
+          <button key={i} className="buddy-card" disabled={workers.length === 0} onClick={() => startRun(w)}>
+            <img src={`PLACEHOLDER`} alt={w.species.name} />
             <div className="buddy-name">{w.species.name}{w.shiny ? ' ✦' : ''}</div>
             <div className="buddy-detail">N{w.level} · {w.species.types.join('/')}</div>
           </button>

@@ -1,4 +1,5 @@
 import { useExp } from '../game/expeditionStore.ts';
+import { pokemonSprite } from '../game/sprites.ts';
 
 export default function CaptureNode() {
   const captureTarget = useExp((s) => s.captureTarget);
@@ -18,7 +19,7 @@ export default function CaptureNode() {
 
       <div className={`cn-pokemon ${isAnimating ? (captureSuccess ? 'cn-caught' : 'cn-fled') : ''}`}>
         <img
-          src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${captureTarget.species.id}.png`}
+          src={pokemonSprite(captureTarget.species.id)}
           alt={captureTarget.species.name}
           className="cn-sprite"
         />

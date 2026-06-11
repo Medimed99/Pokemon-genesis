@@ -47,8 +47,8 @@ function PlayingScreen() {
           </span>
         </div>
         <div className="poker-counters">
-          <span className="counter">✋ {handsLeft}</span>
-          <span className="counter">🗑 {discardsLeft}</span>
+          <span className="counter">Mains {handsLeft}</span>
+          <span className="counter">Déf. {discardsLeft}</span>
         </div>
       </div>
 
@@ -70,7 +70,7 @@ function PlayingScreen() {
       {jokers.length > 0 && (
         <div className="joker-row">
           {jokers.map((j) => (
-            <div key={j.id} className="joker-chip" title={j.tooltip}>{j.icon}</div>
+            <div key={j.id} className="joker-chip" title={j.tooltip}>{j.name_fr.slice(0, 12)}</div>
           ))}
         </div>
       )}
@@ -127,7 +127,7 @@ function ResultScreen() {
 
   return (
     <div className="run-result">
-      <div className={`result-icon ${won ? 'victory' : 'defeat'}`}>{won ? '♠' : '✗'}</div>
+      <div className={`result-icon ${won ? 'victory' : 'defeat'}`}>{won ? '✓' : '✗'}</div>
       <div className="result-title">{won ? 'Run complète !' : 'Partie terminée'}</div>
       <div className="result-sub">
         {won ? 'Tu as battu les 4 antes. Jetons de Luxe accordés !'

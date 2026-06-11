@@ -1,5 +1,6 @@
 import { usePoker } from '../game/pokerStore.ts';
 import { HAND_BASE, type HandRank } from '../game/pokerHands.ts';
+import { POKER_CARD_SPRITES, UI_SPRITES } from '../game/sprites.ts';
 
 const RARITY_COLOR: Record<string, string> = {
   common:'var(--text)', uncommon:'#4fa8d0', rare:'#d9a441',
@@ -19,14 +20,14 @@ export default function PokerShop() {
     <div className="shop">
       <div className="shop-header">
         <div className="shop-title">Boutique Genesis</div>
-        <div className="shop-gold">💰 {gold} Jetons</div>
+        <div className="shop-gold"><img className="ui-ico-sm" src={UI_SPRITES.luxury} alt="" /> {gold} Jetons</div>
       </div>
 
       <div className="shop-items">
         {shopItems.map((item, i) => (
           <div key={item.card.id} className="shop-item">
             <div className="shop-item-top">
-              <span className="shop-icon">{item.card.icon}</span>
+              <img className="shop-icon-spr" src={POKER_CARD_SPRITES[item.card.category] ?? POKER_CARD_SPRITES.joker} alt="" />
               <div>
                 <div className="shop-name" style={{ color: RARITY_COLOR[item.card.rarity] }}>
                   {item.card.name_fr}
@@ -40,7 +41,7 @@ export default function PokerShop() {
               disabled={gold < item.price || (item.card.category === 'joker' && jokers.length >= 5)}
               onClick={() => buyShopItem(i)}
             >
-              Acheter — {item.price} 💰
+              Acheter — {item.price}
             </button>
           </div>
         ))}
@@ -63,7 +64,7 @@ export default function PokerShop() {
         <div className="shop-levels-title">Jokers actifs ({jokers.length}/5)</div>
         <div className="joker-row">
           {jokers.map((j) => (
-            <div key={j.id} className="joker-chip" title={j.tooltip}>{j.icon} {j.name_fr}</div>
+            <div key={j.id} className="joker-chip" title={j.tooltip}>{j.name_fr}</div>
           ))}
           {jokers.length === 0 && <span style={{ color: 'var(--muted)', fontSize: 12 }}>Aucun joker actif.</span>}
         </div>
