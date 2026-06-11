@@ -7,6 +7,7 @@ export interface Ball {
   label: string;
   catchMult: number;
   guaranteed?: boolean;
+  typeBonus?: string; // bonus contre un type spécifique (×1.5 supplémentaire)
 }
 
 export const BALLS: Record<string, Ball> = {
@@ -14,6 +15,7 @@ export const BALLS: Record<string, Ball> = {
   superball: { id: 'superball', label: 'Super Ball', catchMult: 1.5 },
   hyperball: { id: 'hyperball', label: 'Hyper Ball', catchMult: 2 },
   masterball: { id: 'masterball', label: 'Master Ball', catchMult: 1, guaranteed: true },
+  scubaball: { id: 'scubaball', label: 'Scuba Ball', catchMult: 1.5, typeBonus: 'Eau' },
 };
 
 export function rarityOf(s: Species): Rarity {
@@ -34,7 +36,10 @@ const CATCH_BASE: Record<Rarity, number> = {
 
 export function catchChance(s: Species, ball: Ball): number {
   if (ball.guaranteed) return 1;
-  return Math.min(0.98, CATCH_BASE[rarityOf(s)] * ball.catchMult);
+  let mult = ball.catchMult;
+  // Bonus de type (ex: Scuba Ball ×1.5 supplémentaire sur Eau)
+  if (ball.typeBonus && s.types.includes(ball.typeBonus)) mult *= 1.5;
+  return Math.min(0.98, CATCH_BASE[rarityOf(s)] * mult);
 }
 
 // Poids de tirage : les communs sortent bien plus souvent que les légendaires.

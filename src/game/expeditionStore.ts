@@ -10,7 +10,6 @@ import {
 import type { RunItem } from './runItems.ts';
 import type { Worker } from './gameStore.ts';
 
-const BANDWIDTH_COST = 1;
 
 type RunPhase =
   | 'gate'          // pre-run buddy selection
@@ -97,8 +96,7 @@ export const useExp = create<ExpState>((set, get) => ({
   closeGate: () => set({ showGate: false, active: false }),
 
   startRun: (buddy) => {
-    if (!economy.canAfford({ bandwidth: BANDWIDTH_COST })) return;
-    economy.spend({ bandwidth: BANDWIDTH_COST });
+    // Phase de test : bande passante illimitée pour l'Expédition.
     const startPokemon = makeTeamPokemon(buddy.species, Math.max(10, buddy.level * 8), buddy.species ? null : null);
     const map = generateMap(0);
     set({ showGate: false, active: true, phase: 'map', team: [startPokemon], badges: 0, mapNodes: map, currentNodeId: map[0].id, lastBattle: null, captureTarget: null, captureSuccess: null, itemReward: null, pendingEvolutions: [] });

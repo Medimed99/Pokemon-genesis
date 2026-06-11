@@ -37,8 +37,9 @@ export default function BlindBoxPanel() {
       {encounter ? (
         <div className={`encounter ${encounter.shiny ? 'shiny' : ''}`}>
           <div className="enc-stage">
+            {/* Le sprite est masqué dès que le Pokémon est aspiré (shaking/caught) */}
             <img
-              className={`enc-sprite ${captureAnim === 'caught' ? 'enc-caught' : captureAnim === 'fled' ? 'enc-fled' : ''}`}
+              className={`enc-sprite ${captureAnim === 'throwing' ? 'enc-absorbing' : ''} ${(captureAnim === 'shaking' || captureAnim === 'caught') ? 'enc-hidden' : ''} ${captureAnim === 'fled' ? 'enc-released' : ''}`}
               src={pokemonSprite(encounter.species.id, encounter.shiny)}
               alt={encounter.species.name}
             />
@@ -49,6 +50,12 @@ export default function BlindBoxPanel() {
                 alt="Poké Ball"
               />
             )}
+            {captureAnim === 'caught' && <div className="capture-flash" />}
+            {captureAnim === 'caught' && (
+              <div className="capture-stars">
+                <span></span><span></span><span></span>
+              </div>
+            )}
           </div>
 
           <div className="enc-name">{encounter.species.name}{encounter.shiny ? ' ✦' : ''}</div>
@@ -58,13 +65,42 @@ export default function BlindBoxPanel() {
 
           {!animating && (
             <div className="enc-actions">
-              <button className="btn primary ball-btn" disabled={pokeballs < 1} onClick={() => throwBall('pokeball')}>
-                <img src={ballSprite('pokeball')} alt="" /> Poké Ball
-              </button>
-              {superballs > 0 && <button className="btn ball-btn" onClick={() => throwBall('superball')}><img src={ballSprite('superball')} alt="" /> Super Ball</button>}
-              {hyperballs > 0 && <button className="btn ball-btn" onClick={() => throwBall('hyperball')}><img src={ballSprite('hyperball')} alt="" /> Hyper Ball</button>}
-              {masterBalls > 0 && <button className="btn ball-btn" onClick={() => throwBall('masterball')}><img src={ballSprite('masterball')} alt="" /> Master Ball</button>}
-              <button className="btn ghost" onClick={flee}>Fuir</button>
+              {pokeballs > 0 && (
+                <button className="ball-throw-btn" disabled={pokeballs < 1} onClick={() => throwBall('pokeball')}>
+                  <img src={ballSprite('pokeball')} alt="" />
+                  <span className="ball-throw-name">Poké Ball</span>
+                  <span className="ball-throw-count">×{pokeballs}</span>
+                  <span className="ball-throw-pct">{Math.round(catchChance(encounter.species, BALLS.pokeball)*100)}%</span>
+                </button>
+              )}
+              {superballs > 0 && (
+                <button className="ball-throw-btn" onClick={() => throwBall('superball')}>
+                  <img src={ballSprite('superball')} alt="" />
+                  <span className="ball-throw-name">Super Ball</span>
+                  <span className="ball-throw-count">×{superballs}</span>
+                  <span className="ball-throw-pct">{Math.round(catchChance(encounter.species, BALLS.superball)*100)}%</span>
+                </button>
+              )}
+              {hyperballs > 0 && (
+                <button className="ball-throw-btn" onClick={() => throwBall('hyperball')}>
+                  <img src={ballSprite('hyperball')} alt="" />
+                  <span className="ball-throw-name">Hyper Ball</span>
+                  <span className="ball-throw-count">×{hyperballs}</span>
+                  <span className="ball-throw-pct">{Math.round(catchChance(encounter.species, BALLS.hyperball)*100)}%</span>
+                </button>
+              )}
+              {masterBalls > 0 && (
+                <button className="ball-throw-btn gold" onClick={() => throwBall('masterball')}>
+                  <img src={ballSprite('masterball')} alt="" />
+                  <span className="ball-throw-name">Master Ball</span>
+                  <span className="ball-throw-count">×{masterBalls}</span>
+                  <span className="ball-throw-pct">100%</span>
+                </button>
+              )}
+              {pokeballs === 0 && superballs === 0 && hyperballs === 0 && masterBalls === 0 && (
+                <div className="enc-no-balls">Aucune Ball — achète-en en boutique.</div>
+              )}
+              <button className="btn ghost enc-flee-btn" onClick={flee}>Fuir</button>
             </div>
           )}
         </div>

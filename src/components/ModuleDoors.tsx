@@ -2,9 +2,9 @@ import { useGame } from '../game/gameStore.ts';
 import { useExp } from '../game/expeditionStore.ts';
 import { usePoker } from '../game/pokerStore.ts';
 
-interface Props { onShop: () => void; }
+interface Props { onShop: () => void; onStones: () => void; }
 
-export default function ModuleDoors({ onShop }: Props) {
+export default function ModuleDoors({ onShop, onStones }: Props) {
   const phase = useGame((s) => s.phase);
   const openGate = useExp((s) => s.openGate);
   const openPoker = usePoker((s) => s.startGame);
@@ -49,7 +49,10 @@ export default function ModuleDoors({ onShop }: Props) {
           )}
         </div>
       </div>
-      <button className="btn shop-btn" onClick={onShop}>⚙ Boutique Genesis</button>
+      <div className="doors-btns">
+        <button className="btn shop-btn" onClick={onShop}>⚙ Boutique Genesis</button>
+        <button className="btn shop-btn stones-btn" onClick={onStones}>🪨 Pierres d'évolution</button>
+      </div>
     </div>
   );
 }

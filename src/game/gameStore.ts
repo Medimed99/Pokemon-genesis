@@ -11,6 +11,7 @@ import { captureCoins, captureXp, levelFromXp, shinyChance } from './captureEcon
 import { rollDailyQuests, daySeed, type ActiveQuest, type QuestTrack } from './quests.ts';
 import { ACHIEVEMENTS, type AchievementStat } from './achievements.ts';
 import { SHOP_ITEMS } from './shopData.ts';
+import { getStoneEvolution } from './stoneEvolutions.ts';
 import type { GameSave } from './save/SaveAdapter.ts';
 
 export const economy = new EconomyStore();
@@ -79,6 +80,7 @@ interface GameState {
   buyShopItem: (itemId: string) => void;
   claimDaily: () => void;
   claimQuest: (questId: string) => void;
+  useStone: (stoneId: string, workerIdx: number) => void;
   trackQuest: (track: QuestTrack, amount: number, absolute?: boolean) => void;
   checkAchievements: () => void;
   equipCosmetic: (kind: 'title'|'frame'|'background'|'xpfx', id: string) => void;
@@ -102,6 +104,57 @@ function ensureQuests(state: { quests: ActiveQuest[]; questDay: number }): { que
     return { quests: rollDailyQuests(today), questDay: today };
   }
   return state;
+}
+
+
+// ── Lootbox resolver ─────────────────────────────────────────────────────────
+function openLootbox(
+  tier: 'lootbox' | 'rarebox' | 'superrarebox' | 'masterbox',
+  set: (partial: Record<string, unknown>) => void,
+  get: () => { items: Record<string, number> },
+): void {
+  const rng = Math.random;
+  const items: Record<string, number> = { ...get().items };
+  let coinsBonus = 0;
+  let ltBonus = 0;
+
+  if (tier === 'lootbox') {
+    items.pokeball  = (items.pokeball  ?? 0) + (rng() < 0.5 ? 3 : 0);
+    items.superball = (items.superball ?? 0) + (rng() < 0.3 ? 1 : 0);
+    items.framby    = (items.framby    ?? 0) + (rng() < 0.5 ? 2 : 0);
+    items.pinap     = (items.pinap     ?? 0) + (rng() < 0.5 ? 2 : 0);
+    coinsBonus = 100 + Math.floor(rng() * 400);
+    if (rng() < 0.1)  { items.scubaball = (items.scubaball ?? 0) + 5; }
+    if (rng() < 0.01) { coinsBonus += 5000; }
+  } else if (tier === 'rarebox') {
+    items.superball = (items.superball ?? 0) + 2;
+    items.hyperball = (items.hyperball ?? 0) + (rng() < 0.5 ? 1 : 0);
+    items.framby    = (items.framby    ?? 0) + 2;
+    items.pinap     = (items.pinap     ?? 0) + 2;
+    coinsBonus = 500 + Math.floor(rng() * 1500);
+    ltBonus = 1;
+    if (rng() < 0.05) { items.fire_stone = (items.fire_stone ?? 0) + 1; }
+    if (rng() < 0.05) { ltBonus += 1; }
+  } else if (tier === 'superrarebox') {
+    items.hyperball = (items.hyperball ?? 0) + 2;
+    items.scubaball = (items.scubaball ?? 0) + 2;
+    items.ceriz     = (items.ceriz     ?? 0) + 1;
+    coinsBonus = 2000 + Math.floor(rng() * 8000);
+    ltBonus = 2;
+    if (rng() < 0.02) { economy.grant({ master_balls: 1 }); }
+    if (rng() < 0.05) { coinsBonus += 25000; }
+  } else {
+    items.hyperball  = (items.hyperball  ?? 0) + 3;
+    items.ceriz      = (items.ceriz      ?? 0) + 2;
+    coinsBonus = 2500 + Math.floor(rng() * 7500);
+    ltBonus = 5;
+    if (rng() < 0.5) { items.legendary_radar = (items.legendary_radar ?? 0) + 1; }
+    if (rng() < 0.1) { economy.grant({ master_balls: 2 }); }
+    if (rng() < 0.01) { coinsBonus += 50000; }
+  }
+  economy.grant({ coins: coinsBonus });
+  if (ltBonus > 0) economy.grant({ luxury_tokens: ltBonus });
+  set({ items, lastResult: `Lootbox ouverte ! +${coinsBonus.toLocaleString()} Coins${ltBonus ? ` +${ltBonus} JL` : ''}` } as Record<string, unknown>);
 }
 
 export const useGame = create<GameState>((set, get) => ({
@@ -141,8 +194,8 @@ export const useGame = create<GameState>((set, get) => ({
   coinMultiplier: () => {
     let mult = 1;
     const fx = get().activeEffects;
-    if (fx.some((e) => e.id === 'rune_coin')) mult *= 2;     // Pièce Rune (Expédition)
-    if (fx.some((e) => e.id === 'coin_charm')) mult *= 1.5;  // bonus temporaire boutique
+    if (fx.some((e) => e.id === 'rune_coin'))  mult *= 2;    // Pièce Rune (Expédition) ×2
+    if (fx.some((e) => e.id === 'coin_charm')) mult *= 1.5;  // Charm Pièce boutique ×1.5
     return mult;
   },
   ballCount: (ballId) => ballId === 'masterball' ? economy.getBalance('master_balls') : (get().items[ballId] ?? 0),
@@ -159,8 +212,7 @@ export const useGame = create<GameState>((set, get) => ({
     economy.tick(seconds);
     const now = Date.now();
     const effects = get().activeEffects.filter((e) => e.expiresAt === 0 || e.expiresAt > now);
-    const expBoost = effects.some((e) => e.id === 'exp_charm');
-    const gain = get().totalPps() * seconds * (expBoost ? 2 : 1);
+    const gain = get().totalPps() * seconds;
     if (gain > 0) economy.grant({ eo: gain });
     if (effects.length !== get().activeEffects.length) set({ activeEffects: effects });
   },
@@ -244,7 +296,8 @@ export const useGame = create<GameState>((set, get) => ({
     }
 
     const coins = captureCoins(species, shiny, get().coinMultiplier());
-    const xp = captureXp(species, shiny);
+    const expBoost = get().activeEffects.some((e) => e.id === 'exp_charm');
+    const xp = Math.floor(captureXp(species, shiny) * (expBoost ? 1.25 : 1));
     economy.grant({ coins });
 
     set((s) => ({ totalCoinsEarned: s.totalCoinsEarned + coins, pokeboxOpened: s.pokeboxOpened + 1, fleeStreak: 0 }));
@@ -277,11 +330,31 @@ export const useGame = create<GameState>((set, get) => ({
   openBlindBox: () => {
     if (get().encounter) return;
     const { pokedex } = get();
+    const fx = get().activeEffects;
+    const hasIncense  = fx.some((e) => e.id === 'incense');
+    const hasWaterBait= fx.some((e) => e.id === 'water_bait');
+    const hasColCharm = fx.some((e) => e.id === 'col_charm');
+
     if (pokedex.length < 3) {
       const common = KANTO.filter((s) => !s.legendary && s.bst < 400);
       set({ encounter: { species: common[Math.floor(Math.random() * common.length)], shiny: false }, lastResult: null });
     } else {
-      const pool = availablePool(pokedex);
+      let pool = availablePool(pokedex);
+      // Incense : augmente la probabilité de tirer un Rare+
+      if (hasIncense) {
+        const rarePlus = pool.filter((s) => s.bst >= 400);
+        if (rarePlus.length > 0) pool = [...pool, ...rarePlus, ...rarePlus]; // 3× plus de chance
+      }
+      // Water Bait : multiplie les Pokémon Eau dans le pool
+      if (hasWaterBait) {
+        const waterPoke = pool.filter((s) => s.types.includes('Eau'));
+        if (waterPoke.length > 0) pool = [...pool, ...waterPoke, ...waterPoke];
+      }
+      // Col Charm : +10% chance de tirer un Pokémon non capturé (déjà garanti dans encounter, bonus mineur sur pool)
+      if (hasColCharm) {
+        const unseen = pool.filter((s) => !get().pokedex.includes(s.id));
+        if (unseen.length > 0) pool = [...pool, ...unseen];
+      }
       const species = pool[Math.floor(Math.random() * pool.length)];
       const charm = get().activeEffects.some((e) => e.id === 'shiny_charm');
       const shiny = Math.random() < shinyChance(get().streak, charm);
@@ -299,9 +372,16 @@ export const useGame = create<GameState>((set, get) => ({
     if (ballId === 'masterball') economy.spend({ master_balls: 1 });
     else set((s) => ({ items: { ...s.items, [ballId]: (s.items[ballId] ?? 0) - 1 } }));
 
-    const ceriz = (items.ceriz as number ?? 0) > 0;
-    const modBall = ceriz ? { ...ball, catchMult: ball.catchMult + 999 } : ball;
+    // Baie Framby : +50% catchMult (consommée)
+    const framby = (items.framby as number ?? 0) > 0;
+    if (framby) set((s) => ({ items: { ...s.items, framby: Math.max(0, (s.items.framby as number ?? 0) - 1) } }));
+
+    // Baie Ceriz : 100% capture sur Shiny UNIQUEMENT (V1)
+    const ceriz = (items.ceriz as number ?? 0) > 0 && encounter.shiny;
     if (ceriz) set((s) => ({ items: { ...s.items, ceriz: Math.max(0, (s.items.ceriz as number ?? 0) - 1) } }));
+
+    const baseMult = ball.catchMult * (framby ? 1.5 : 1);
+    const modBall = ceriz ? { ...ball, catchMult: baseMult + 999 } : { ...ball, catchMult: baseMult };
 
     const success = Math.random() < catchChance(encounter.species, modBall);
     const earlySuccess = pokedex.length < 3 || success;
@@ -322,7 +402,8 @@ export const useGame = create<GameState>((set, get) => ({
           set((s) => ({ items: { ...s.items, pinap: Math.max(0, (s.items.pinap as number ?? 0) - 1) } }));
         }
         const coins = captureCoins(target.species, target.shiny, get().coinMultiplier());
-        const xp = captureXp(target.species, target.shiny);
+        const expBoost2 = get().activeEffects.some((e) => e.id === 'exp_charm');
+        const xp = Math.floor(captureXp(target.species, target.shiny) * (expBoost2 ? 1.25 : 1));
         economy.grant({ coins });
         const newStreak = get().streak + 1;
         set((s) => ({ totalCoinsEarned: s.totalCoinsEarned + coins, fleeStreak: 0 }));
@@ -380,17 +461,34 @@ export const useGame = create<GameState>((set, get) => ({
     if (balMap[item.currency] < item.price) return;
     economy.spend({ [item.currency]: item.price } as Record<ResourceId, number>);
 
-    if (item.id === 'masterball_1') { economy.grant({ master_balls: 1 }); return; }
-    if (item.id === 'pokebox_reset') { set((st) => ({ items: { ...st.items, pokebox_used: 0, pokebox_reset: 0 } })); return; }
-    if (item.id === 'shiny_charm_1') { set((st) => ({ activeEffects: [...st.activeEffects, { id: 'shiny_charm', expiresAt: Date.now() + DAY_MS }] })); return; }
-    if (item.id === 'exp_charm_1') { set((st) => ({ activeEffects: [...st.activeEffects, { id: 'exp_charm', expiresAt: Date.now() + 3600_000 }] })); return; }
-    if (item.id === 'coin_charm_1') { set((st) => ({ activeEffects: [...st.activeEffects, { id: 'coin_charm', expiresAt: Date.now() + 3600_000 }] })); return; }
-    if (item.id === 'incense_1') { set((st) => ({ items: { ...st.items, incense: (st.items.incense ?? 0) + 1 } })); return; }
-    if (item.id === 'legendary_radar_1') { set((st) => ({ items: { ...st.items, legendary_radar: (st.items.legendary_radar ?? 0) + 1 } })); return; }
-
+    // Effets spéciaux
+    const now = Date.now();
+    switch (item.id) {
+      case 'masterball_1': economy.grant({ master_balls: 1 }); return;
+      case 'pokebox_reset': set((st) => ({ items: { ...st.items, pokebox_used: 0, pokebox_reset: 0 } })); return;
+      case 'exp_charm_1':   set((st) => ({ activeEffects: [...st.activeEffects, { id: 'exp_charm',    expiresAt: now + 15 * 60_000 }] })); return;
+      case 'lucky_charm_1': set((st) => ({ activeEffects: [...st.activeEffects, { id: 'shiny_charm',  expiresAt: now + 30 * 60_000 }] })); return;
+      case 'coin_charm_1':  set((st) => ({ activeEffects: [...st.activeEffects, { id: 'coin_charm',   expiresAt: now + 60 * 60_000 }] })); return;
+      case 'charm_col_1':   set((st) => ({ activeEffects: [...st.activeEffects, { id: 'col_charm',    expiresAt: now + 20 * 60_000 }] })); return;
+      case 'incense_1':     set((st) => ({ activeEffects: [...st.activeEffects, { id: 'incense',      expiresAt: now + 10 * 60_000 }] })); return;
+      case 'bait_1':        set((st) => ({ activeEffects: [...st.activeEffects, { id: 'water_bait',   expiresAt: now + 10 * 60_000 }] })); return;
+      case 'legendary_radar_1': set((st) => ({ items: { ...st.items, legendary_radar: (st.items.legendary_radar ?? 0) + 1 } })); return;
+      // Pierres d'évolution
+      case 'fire_stone':    set((st) => ({ items: { ...st.items, fire_stone:    (st.items.fire_stone    ?? 0) + 1 } })); return;
+      case 'water_stone':   set((st) => ({ items: { ...st.items, water_stone:   (st.items.water_stone   ?? 0) + 1 } })); return;
+      case 'thunder_stone': set((st) => ({ items: { ...st.items, thunder_stone: (st.items.thunder_stone ?? 0) + 1 } })); return;
+      case 'moon_stone':    set((st) => ({ items: { ...st.items, moon_stone:    (st.items.moon_stone    ?? 0) + 1 } })); return;
+      case 'leaf_stone':    set((st) => ({ items: { ...st.items, leaf_stone:    (st.items.leaf_stone    ?? 0) + 1 } })); return;
+      // Lootboxes → résolution immédiate
+      case 'lootbox':      openLootbox('lootbox', set, get); return;
+      case 'rarebox':      openLootbox('rarebox', set, get); return;
+      case 'superrarebox': openLootbox('superrarebox', set, get); return;
+      case 'masterbox':    openLootbox('masterbox', set, get); return;
+    }
+    // Balls et baies : mapping direct
     const keyMap: Record<string, string> = {
-      pokeball_5: 'pokeball', superball_3: 'superball', hyperball_1: 'hyperball',
-      framby_3: 'framby', pinap_3: 'pinap', ceriz_3: 'ceriz',
+      pokeball_10: 'pokeball', superball_5: 'superball', hyperball_5: 'hyperball', scubaball_5: 'scubaball',
+      framby_5: 'framby', pinap_5: 'pinap', ceriz_3: 'ceriz',
     };
     const key = keyMap[item.id];
     if (key) set((st) => ({ items: { ...st.items, [key]: (st.items[key] ?? 0) + item.qty } }));
@@ -450,6 +548,23 @@ export const useGame = create<GameState>((set, get) => ({
 
   trackExpedition: () => { set((s) => ({ expeditionsDone: s.expeditionsDone + 1 })); get().checkAchievements(); },
   trackPokerWin: () => { set((s) => ({ pokerWins: s.pokerWins + 1 })); get().checkAchievements(); },
+
+  useStone: (stoneId, workerIdx) => {
+    const { items, workers } = get();
+    const stoneCount = (items[stoneId] as number ?? 0);
+    if (stoneCount < 1) { set({ lastResult: 'Aucune pierre disponible.' }); return; }
+    const worker = workers[workerIdx];
+    if (!worker) return;
+    const newId = getStoneEvolution(stoneId, worker.species.id);
+    const newSpecies = newId ? ALL_SPECIES.find((s) => s.id === newId) : null;
+    if (!newSpecies) { set({ lastResult: `${worker.species.name} ne peut pas évoluer avec cette pierre.` }); return; }
+    set((s) => ({
+      workers: s.workers.map((w, i) => i === workerIdx ? { ...w, species: newSpecies } : w),
+      pokedex: s.pokedex.includes(newId!) ? s.pokedex : [...s.pokedex, newId!],
+      items: { ...s.items, [stoneId]: stoneCount - 1 },
+      lastResult: `${worker.species.name} → ${newSpecies.name} ! Évolution réussie !`,
+    }));
+  },
 
   hydrate: (save) => {
     economy.load(save.economy);
