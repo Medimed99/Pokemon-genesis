@@ -58,7 +58,6 @@ export const NODE_ITEM_SPRITE: Record<string, string> = {
   heal: 'potion',
   tm: 'tm-normal',
 };
-<<<<<<< HEAD
 
 // ── Icônes UI (remplacent les émojis) — 100% PokeAPI ────────────────────────
 export const UI_SPRITES = {
@@ -87,5 +86,3 @@ export const POKER_CARD_SPRITES: Record<string, string> = {
   planet:   itemSprite('comet-shard'),
   spectral: itemSprite('reaper-cloth'),
 };
-=======
->>>>>>> 144165047627239bd21da23e25f46140ab9d66d6

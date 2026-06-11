@@ -413,11 +413,7 @@ export const useGame = create<GameState>((set, get) => ({
             workers: s.workers.map((w) => w.species.id === id ? { ...w, level: w.level + 1, shiny: w.shiny || target.shiny } : w),
             shinyDex: target.shiny && !s.shinyDex.includes(id) ? [...s.shinyDex, id] : s.shinyDex,
             totalXp: s.totalXp + xp, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak),
-<<<<<<< HEAD
             lastResult: `${target.species.name}${target.shiny ? ' ✦ SHINY' : ''} fusionné ! +${coins} Coins · Streak ${newStreak}`,
-=======
-            lastResult: `${target.species.name}${target.shiny ? ' ✦ SHINY' : ''} fusionné ! +${coins} Coins  🔥${newStreak}`,
->>>>>>> 144165047627239bd21da23e25f46140ab9d66d6
           }));
         } else {
           const newPokedex = [...get().pokedex, id];
@@ -429,11 +425,7 @@ export const useGame = create<GameState>((set, get) => ({
             shinyDex: target.shiny ? [...s.shinyDex, id] : s.shinyDex,
             totalXp: s.totalXp + xp, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak),
             phase: newPhase, colorsReturned: colorsReturned || s.colorsReturned,
-<<<<<<< HEAD
             lastResult: `${target.species.name}${target.shiny ? ' ✦ SHINY' : ''} capturé ! +${coins} Coins · Streak ${newStreak}`,
-=======
-            lastResult: `${target.species.name}${target.shiny ? ' ✦ SHINY' : ''} capturé ! +${coins} Coins  🔥${newStreak}`,
->>>>>>> 144165047627239bd21da23e25f46140ab9d66d6
           }));
         }
         get().trackQuest('captures', 1);
@@ -445,11 +437,7 @@ export const useGame = create<GameState>((set, get) => ({
       } else {
         const lostStreak = get().streak;
         set((s) => ({
-<<<<<<< HEAD
           lastResult: `${target.species.name} s'est enfui…${lostStreak >= 10 ? ` Streak ${lostStreak} perdue !` : ''}`,
-=======
-          lastResult: `${target.species.name} s'est enfui…${lostStreak >= 10 ? ` Streak 🔥${lostStreak} perdue !` : ''}`,
->>>>>>> 144165047627239bd21da23e25f46140ab9d66d6
           streak: 0, fleeStreak: s.fleeStreak + 1,
         }));
         get().trackQuest('flees', 1);

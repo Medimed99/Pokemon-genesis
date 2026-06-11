@@ -111,7 +111,18 @@ export function makeTeamPokemon(species: Species, level: number, item: RunItem |
 
 // ─── Autobattle ──────────────────────────────────────────────────────────────
 
-export interface BattleLog { text: string; color?: 'green' | 'red' | 'yellow' | 'gray'; }
+export interface BattleLog {
+  text: string;
+  color?: 'green' | 'red' | 'yellow' | 'gray';
+  // Visual replay data (optional — filled during combat)
+  playerId?: number;      // species id of active player Pokémon
+  playerHp?: number;
+  playerMaxHp?: number;
+  enemyId?: number;
+  enemyHp?: number;
+  enemyMaxHp?: number;
+  event?: 'matchup' | 'attack_player' | 'attack_enemy' | 'ko' | 'result';
+}
 
 export interface AutoBattleResult {
   playerWon: boolean;
@@ -164,7 +175,12 @@ export function autoBattle(playerTeam: TeamPokemon[], enemyTeam: TeamPokemon[]):
     const p = pTeam[pIdx];
     const e = eTeam[eIdx];
 
-    log.push({ text: `${p.species.name} (Nv${p.level}) vs ${e.species.name} (Nv${e.level})`, color: 'gray' });
+    log.push({
+      text: `${p.species.name} (Nv${p.level}) vs ${e.species.name} (Nv${e.level})`,
+      color: 'gray', event: 'matchup',
+      playerId: p.species.id, playerHp: p.currentHp, playerMaxHp: p.maxHp,
+      enemyId: e.species.id, enemyHp: e.currentHp, enemyMaxHp: e.maxHp,
+    });
 
     const pFirst = effectiveSpeed(p) >= effectiveSpeed(e);
     const order: [TeamPokemon, TeamPokemon, boolean][] = pFirst
@@ -187,11 +203,18 @@ export function autoBattle(playerTeam: TeamPokemon[], enemyTeam: TeamPokemon[]):
       log.push({
         text: `${att.species.name} → ${dmg} dégâts sur ${def.species.name}.${effStr}`,
         color: isPlayer ? 'green' : 'red',
+        event: isPlayer ? 'attack_player' : 'attack_enemy',
+        playerId: pTeam[pIdx]?.species.id, playerHp: pTeam[pIdx]?.currentHp, playerMaxHp: pTeam[pIdx]?.maxHp,
+        enemyId: eTeam[eIdx]?.species.id, enemyHp: eTeam[eIdx]?.currentHp, enemyMaxHp: eTeam[eIdx]?.maxHp,
       });
 
       if (def.currentHp === 0) {
         def.fainted = true;
-        log.push({ text: `${def.species.name} est K.O. !`, color: isPlayer ? 'green' : 'red' });
+        log.push({
+          text: `${def.species.name} est K.O. !`, color: isPlayer ? 'green' : 'red', event: 'ko',
+          playerId: pTeam[pIdx]?.species.id, playerHp: pTeam[pIdx]?.currentHp, playerMaxHp: pTeam[pIdx]?.maxHp,
+          enemyId: eTeam[eIdx]?.species.id, enemyHp: eTeam[eIdx]?.currentHp, enemyMaxHp: eTeam[eIdx]?.maxHp,
+        });
         if (isPlayer) { nextE(); } else { nextP(); }
         break;
       }
