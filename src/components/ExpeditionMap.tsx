@@ -1,6 +1,10 @@
 import { useExp } from '../game/expeditionStore.ts';
 import type { MapNode, NodeType } from '../game/expedition.ts';
+<<<<<<< HEAD
 import { pokemonSprite, itemSprite, UI_SPRITES } from '../game/sprites.ts';
+=======
+import { pokemonSprite, itemSprite } from '../game/sprites.ts';
+>>>>>>> 144165047627239bd21da23e25f46140ab9d66d6
 
 const VIEW_W = 360;
 const ROW_H = 96;
@@ -109,7 +113,11 @@ export default function ExpeditionMap() {
                 <circle cx={x} cy={y} r={r} fill="#0c1a15" stroke={ring} strokeWidth={clickable ? 3 : 1.5}
                   className={clickable ? (isBoss ? 'node-boss-glow' : 'node-reach-glow') : ''} />
                 {node.type === 'start' ? (
+<<<<<<< HEAD
                   <image href={UI_SPRITES.expedition} x={x - 12} y={y - 12} width="24" height="24" style={{ imageRendering: 'pixelated' }} />
+=======
+                  <text x={x} y={y + 5} textAnchor="middle" fontSize="16">🏠</text>
+>>>>>>> 144165047627239bd21da23e25f46140ab9d66d6
                 ) : (
                   <image href={nodeIconSprite(node)} x={x - r * 0.7} y={y - r * 0.7} width={r * 1.4} height={r * 1.4} style={{ imageRendering: 'pixelated' }} />
                 )}

@@ -51,8 +51,13 @@ export default function ModuleDoors({ onShop, onStones }: Props) {
         </div>
       </div>
       <div className="doors-btns">
+<<<<<<< HEAD
         <button className="btn shop-btn" onClick={onShop}><img className="ui-ico-sm" src={UI_SPRITES.shop} alt="" /> Boutique Genesis</button>
         <button className="btn shop-btn stones-btn" onClick={onStones}><img className="ui-ico-sm" src={UI_SPRITES.stones} alt="" /> Pierres d'évolution</button>
+=======
+        <button className="btn shop-btn" onClick={onShop}>⚙ Boutique Genesis</button>
+        <button className="btn shop-btn stones-btn" onClick={onStones}>🪨 Pierres d'évolution</button>
+>>>>>>> 144165047627239bd21da23e25f46140ab9d66d6
       </div>
     </div>
   );

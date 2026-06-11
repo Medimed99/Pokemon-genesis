@@ -12,7 +12,11 @@ export function ItemNode() {
     <div className="item-node">
       <div className="in-title">Objet trouvé !</div>
       <div className="in-item">
+<<<<<<< HEAD
         <img className="in-icon-spr" src={itemSprite(itemReward.icon)} alt={itemReward.name} />
+=======
+        <img className="in-icon-spr" src={itemSprite(runItemSprite(itemReward.id))} alt={itemReward.name} />
+>>>>>>> 144165047627239bd21da23e25f46140ab9d66d6
         <div>
           <div className="in-name">{itemReward.name}</div>
           <div className="in-desc">{itemReward.description}</div>
@@ -60,3 +64,18 @@ export function HealNode() {
   );
 }
 
+<<<<<<< HEAD
+=======
+function runItemSprite(id: string): string {
+  const map: Record<string, string> = {
+    belt_combat:'black-belt', mystic_water:'mystic-water', miracle_seed:'miracle-seed',
+    charcoal:'charcoal', magnet:'magnet', nevermeltice:'never-melt-ice', spell_tag:'spell-tag',
+    dragon_fang:'dragon-fang', soft_sand:'soft-sand', sharp_beak:'sharp-beak', poison_barb:'poison-barb',
+    hard_stone:'hard-stone', silver_powder:'silver-powder', twisted_spoon:'twisted-spoon',
+    black_belt:'metal-coat', black_glasses:'black-glasses', fairy_feather:'fairy-feather',
+    quick_claw:'quick-claw', kings_rock:'kings-rock', choice_scarf:'choice-scarf',
+    rare_candy:'rare-candy', lucky_egg:'lucky-egg', leftovers:'leftovers', coin_rune:'amulet-coin',
+  };
+  return map[id] ?? 'rare-candy';
+}
+>>>>>>> 144165047627239bd21da23e25f46140ab9d66d6

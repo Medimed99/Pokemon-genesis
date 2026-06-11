@@ -10,7 +10,10 @@ export default function PokeBoxPanel() {
   const items         = useGame((s) => s.items);
   const lastResult    = useGame((s) => s.lastResult);
   const openPokeBox   = useGame((s) => s.openPokeBox);
+<<<<<<< HEAD
   const claimDaily    = useGame((s) => s.claimDaily);
+=======
+>>>>>>> 144165047627239bd21da23e25f46140ab9d66d6
   const reveal        = useGame((s) => s.pokeboxReveal);
 
   const boxUsed: number = (items as Record<string, number>).pokebox_used ?? 0;
